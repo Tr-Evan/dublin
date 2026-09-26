@@ -1,6 +1,6 @@
 # Carnet de voyage · Dublin
 
-Application React + Vite installable sur mobile, avec cartes modifiables, documents privés, programme familial temps réel et partage GPS approximatif à la demande. Le projet fonctionne aussi en mode carnet local, sans configuration Supabase : les cartes d'origine de la V1 restent alors disponibles.
+Application React + Vite installable sur mobile, avec galeries photo multi-images, documents privés, checklist partagée, météo à sept jours, programme familial temps réel et partage GPS approximatif à la demande. Le projet fonctionne aussi en mode carnet local, sans configuration Supabase : les cartes d'origine de la V1 restent alors disponibles.
 
 ## 1. Dépendances et lancement
 
@@ -19,7 +19,7 @@ npm run build
 ## 2. Créer le backend gratuit Supabase
 
 1. Créez un projet Supabase sur le palier gratuit et notez son URL de projet et sa clé **publishable/anon**. L'offre dépend de ses quotas et de ses règles de disponibilité. Ne mettez jamais une clé `service_role` dans le navigateur, le dépôt ou les variables `VITE_*`.
-2. Dans **SQL Editor**, exécutez le contenu de [`supabase/schema.sql`](./supabase/schema.sql). Ce script crée les tables, les politiques Row Level Security, les deux buckets et active Realtime pour les cartes, le programme et le partage de position.
+2. Dans **SQL Editor**, exécutez le contenu de [`supabase/schema.sql`](./supabase/schema.sql). Pour un projet déjà configuré en V2/V3, réexécutez ce script : il ajoute les colonnes `image_paths` aux lieux et aux publications en conservant les anciennes images. Le script crée les tables, les politiques Row Level Security, les buckets et active Realtime.
 3. Dans **Authentication → Users**, créez deux comptes avec les adresses de connexion d'Enola et d'Evan. Désactivez l'inscription publique.
 4. Ajoutez **uniquement** ces deux identifiants à la liste des administrateurs. Remplacez les adresses d'exemple avant d'exécuter la requête :
 
@@ -46,7 +46,7 @@ npm run build
 
 6. Redémarrez `npm run dev`, connectez-vous à `/admin`, puis choisissez **Importer les cartes de la V1**. Cet import n'écrase pas les lieux déjà présents. Vous pouvez ensuite ajouter, modifier et supprimer les visites, restaurants et pubs, et programmer les visites du 20 au 23 octobre.
 
-La connexion est limitée aux lignes de `trip_admins` par RLS. Tous les navigateurs peuvent lire les adresses et les visites explicitement ajoutées au programme ; seuls Enola et Evan peuvent les modifier. Les photos de couverture sont publiées avec les adresses ; leur téléversement les réencode en JPEG optimisé pour retirer les métadonnées EXIF de localisation.
+La connexion est limitée aux lignes de `trip_admins` par RLS. Tous les navigateurs peuvent lire les adresses et les visites explicitement ajoutées au programme ; seuls Enola et Evan peuvent les modifier. Les photos des lieux et du journal sont stockées dans Storage ; leurs téléversements multiples sont réencodés en JPEG optimisé pour retirer les métadonnées EXIF de localisation. Chaque galerie peut contenir jusqu'à huit images.
 
 ## 3. Documents et mode hors ligne
 
@@ -60,11 +60,11 @@ La PWA précache l'interface et mémorise les photos publiques consultées (couv
 
 La page `/checklist` est réservée aux administrateurs : Evan et Enola peuvent ajouter, cocher et supprimer les éléments. La liste est synchronisée en temps réel entre les appareils connectés. Elle n'est pas enregistrée localement ; une connexion à Supabase est nécessaire pour la charger ou la modifier.
 
-Le tableau de bord récupère la météo du centre de Dublin auprès d'Open-Meteo, sans clé API. La dernière réponse est conservée dans le navigateur pour fournir un affichage de secours lorsque le réseau est indisponible.
+Le tableau de bord récupère la météo actuelle et les prévisions sur sept jours du centre de Dublin auprès d'Open-Meteo, sans clé API. La dernière réponse est conservée dans le navigateur pour fournir un affichage de secours lorsque le réseau est indisponible.
 
 ## 5. Espace famille, journal et géolocalisation
 
-Envoyez `/family` à vos proches en France. Cette page est publique : toute personne à qui le lien est communiqué peut lire les adresses, le programme, les messages et les photos publiés, ainsi que la position lorsque celle-ci est activée. Depuis `/admin`, les administrateurs peuvent publier un message avec une date, une heure et une photo ; les publications sont classées par ordre chronologique. La bucket `family-updates` est publique afin que les proches puissent consulter les photos sans compte : n'y téléversez aucun document privé.
+Envoyez `/family` à vos proches en France. Cette page est publique : toute personne à qui le lien est communiqué peut lire les adresses, le programme, les messages et les photos publiés, ainsi que la position lorsque celle-ci est activée. Depuis l'onglet **Journal Famille** de `/admin`, les administrateurs peuvent publier un message avec une date, une heure et plusieurs photos ; les publications sont classées par ordre chronologique. La bucket `family-updates` est publique afin que les proches puissent consulter les photos sans compte : n'y téléversez aucun document privé.
 
 La position est **désactivée par défaut**, et le navigateur ne demande le GPS qu'après le clic explicite sur **Activer et partager ma position**. Les coordonnées sont arrondies au millième de degré (environ 100 m), limitées au temps nécessaire et actualisées en temps réel. Un garde-fou de cinq minutes masque automatiquement la position si le téléphone ferme la PWA sans arrêter le suivi ; le bouton d'arrêt efface immédiatement les coordonnées. Si vous ne souhaitez aucune localisation publique, n'activez pas ce contrôle.
 
@@ -83,7 +83,11 @@ Importez le dépôt dans Vercel, puis définissez :
 
 Redéployez après avoir ajouté ou changé une variable. La règle dans [`vercel.json`](./vercel.json) réécrit les routes React (`/admin`, `/documents`, `/checklist`, `/family`, etc.) vers la page de l'application. Dans Supabase Authentication, ajoutez aussi l'URL de production à **Site URL** et **Redirect URLs**. La géolocalisation du navigateur requiert HTTPS (fourni sur Vercel).
 
-## Structure V3
+## Administration V4
+
+Le tableau de bord `/admin` est organisé en quatre onglets : **Lieux & Programme**, **Journal Famille**, **Coffre-fort** et **Checklist**. Les zones photo permettent la sélection multiple ou le glisser-déposer. Dans les pages publiques, les galeries ouvrent une lightbox navigable au clavier (Échap, flèches gauche/droite).
+
+## Structure V4
 
 ```text
 public/manifest.json
@@ -92,10 +96,12 @@ src/
   assets/dublin-skyline.svg
   components/
     admin/       formulaires de lieux, planification et géolocalisation
+    checklist/   aperçu interactif de la checklist sur l'accueil
     documents/   coffre-fort privé et zones de dépôt
     family/      carte, timeline et formulaire de publication
     layout/      Header, BottomNavigation
-    weather/     widget météo
+    ui/          ImageGallery et Lightbox
+    weather/     widget météo et prévisions
   hooks/         lieux, programme, checklist, journal familial et météo
   pages/         Home, Visites, Food, Pubs, Checklist, Family, Admin
   services/      Supabase, lieux, programme, documents, checklist, journal, météo

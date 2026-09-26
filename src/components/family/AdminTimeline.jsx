@@ -7,6 +7,7 @@ import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import FamilyUpdateComposer from "./FamilyUpdateComposer";
 import SectionHeading from "../ui/SectionHeading";
+import ImageGallery from "../ui/ImageGallery";
 
 export default function AdminTimeline() {
   const { session } = useAdminAuth();
@@ -47,7 +48,7 @@ export default function AdminTimeline() {
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {updates.map((update) => (
           <article key={update.id} className="glass-card overflow-hidden rounded-2xl">
-            {update.photoUrl && <img src={update.photoUrl} alt={`Souvenir : ${update.title}`} loading="lazy" className="h-40 w-full object-cover" />}
+            <div className="p-3 pb-0"><ImageGallery images={update.photoUrls ?? (update.photoUrl ? [update.photoUrl] : [])} label={`Souvenir : ${update.title}`} className="h-40" /></div>
             <div className="flex items-start justify-between gap-3 p-4">
               <div><Badge tone="mint">{new Date(`${update.travel_date}T12:00:00`).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })} · {update.travel_time.slice(0, 5)}</Badge><h3 className="mt-2 font-semibold text-white">{update.title}</h3></div>
               <button type="button" disabled={busy === update.id} onClick={() => void deleteUpdate(update)} aria-label={`Supprimer le souvenir ${update.title}`} className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:text-rose-200 disabled:opacity-40">{busy === update.id ? <LoaderCircle size={15} className="animate-spin" /> : <Trash2 size={15} />}</button>

@@ -3,6 +3,7 @@ import { CalendarDays, Camera, Check, Clock3, LockKeyhole, MapPin, Sparkles } fr
 import FamilyMap from "../components/family/FamilyMap";
 import Badge from "../components/ui/Badge";
 import SectionHeading from "../components/ui/SectionHeading";
+import ImageGallery from "../components/ui/ImageGallery";
 import useFamilyUpdates from "../hooks/useFamilyUpdates";
 import useSchedule from "../hooks/useSchedule";
 import { trip } from "../data/itineraryData";
@@ -20,7 +21,7 @@ function FamilyUpdateCard({ update, isLast }) {
       <span className="absolute left-0 top-2 grid h-7 w-7 place-items-center rounded-full border border-mint/25 bg-ink text-mint"><Camera size={13} /></span>
       {!isLast && <span aria-hidden="true" className="absolute bottom-[-1.25rem] left-[13px] top-9 w-px bg-gradient-to-b from-mint/30 to-white/[0.06]" />}
       <article className="glass-card overflow-hidden rounded-3xl">
-        {update.photoUrl && <img src={update.photoUrl} alt={`Souvenir de Dublin : ${update.title}`} loading="lazy" className="max-h-[30rem] w-full object-cover" />}
+        <ImageGallery images={update.photoUrls ?? (update.photoUrl ? [update.photoUrl] : [])} label={`Souvenir de Dublin : ${update.title}`} className="max-h-[30rem] h-64 sm:h-96" />
         <div className="p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-2"><Badge tone="mint">{dateLabel} · {update.travel_time.slice(0, 5)}</Badge><span className="text-[11px] text-muted">Dublin</span></div>
           <h3 className="mt-3 text-lg font-semibold text-white sm:text-xl">{update.title}</h3>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Plane, Sparkles, Umbrella } from "lucide-react";
+import { ArrowRight, Plane, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trip } from "../data/itineraryData";
 import dublinSkyline from "../assets/dublin-skyline.svg";
@@ -8,6 +8,7 @@ import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import SectionHeading from "../components/ui/SectionHeading";
 import WeatherWidget from "../components/weather/WeatherWidget";
+import ChecklistPreview from "../components/checklist/ChecklistPreview";
 
 function useCountdown(targetDate) {
   const [now, setNow] = useState(() => Date.now());
@@ -53,7 +54,7 @@ export default function Home() {
             <Badge tone="mint" icon={Sparkles}>{trip.datesLabel}</Badge>
             <p className="mt-7 text-sm font-medium uppercase tracking-[0.24em] text-mint">L'Irlande nous appelle</p>
             <h1 className="mt-3 max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-6xl">
-              Dublin,<br /><span className="text-mint">avec la fratrie Troget.</span>
+              Dublin,<br /><span className="text-mint">avec ma sœur, Enola.</span>
             </h1>
             <p className="mt-5 max-w-lg text-sm leading-7 text-slate-300 sm:text-base">
               Quatre jours de belles histoires, de bons petits plats et de musique au coin du feu. Votre petite boussole pour profiter de Dublin.
@@ -104,19 +105,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section>
-        <SectionHeading eyebrow="Avant de partir" title="Les petits essentiels" description="Quelques réflexes utiles notés dans votre carnet." />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {trip.checklist.slice(0, 3).map((item, index) => (
-            <div key={item} className="glass-card flex items-start gap-3 rounded-2xl p-4">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-mint/[0.08] text-mint"><Umbrella size={16} /></span>
-              <p className="pt-1 text-sm leading-5 text-slate-300">{item}</p>
-              <span className="ml-auto pt-1 text-xs text-muted">0{index + 1}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-5 flex justify-end"><Link to="/checklist" className="text-sm font-semibold text-mint hover:text-emerald-200">Ouvrir la checklist valise <ArrowRight className="ml-1 inline" size={15} /></Link></div>
-      </section>
+      <ChecklistPreview />
     </div>
   );
 }

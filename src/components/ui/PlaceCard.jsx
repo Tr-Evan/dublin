@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowUpRight, Clock3, MapPin, Navigation, ChevronDown } from "lucide-react";
 import Badge from "./Badge";
 import Button from "./Button";
+import ImageGallery from "./ImageGallery";
 
 const toneFor = (accent) => ({ mint: "mint", amber: "amber", rose: "rose" }[accent] ?? "mint");
 
@@ -12,7 +13,7 @@ export default function PlaceCard({ place }) {
 
   return (
     <article className="glass-card flex h-full flex-col rounded-3xl p-5 transition duration-300 hover:-translate-y-1 hover:border-mint/20 sm:p-6">
-      {place.imageUrl && <img src={place.imageUrl} alt="" loading="lazy" className="mb-4 h-40 w-full rounded-2xl object-cover" />}
+      <div className="mb-4"><ImageGallery images={place.imageUrls ?? (place.imageUrl ? [place.imageUrl] : [])} label={place.name} className="h-40" /></div>
       <div className="mb-4 flex items-start justify-between gap-3">
         <Badge tone={tone}>{place.category}</Badge>
         <span className="text-xs text-muted">{place.distance}</span>

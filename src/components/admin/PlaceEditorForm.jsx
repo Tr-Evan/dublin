@@ -20,13 +20,14 @@ const inputClass = "mt-2 min-h-11 w-full rounded-xl border border-white/10 bg-in
 
 export default function PlaceEditorForm({ place, kind, onSave, onCancel }) {
   const [values, setValues] = useState(blankPlace);
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]);
+  const [dragging, setDragging] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setValues(place ? { ...blankPlace, ...place } : blankPlace);
-    setImage(null);
+    setImages([]);
     setError("");
   }, [place, kind]);
 
@@ -34,14 +35,28 @@ export default function PlaceEditorForm({ place, kind, onSave, onCancel }) {
     setValues((current) => ({ ...current, [field]: value }));
   }
 
+  function selectImages(fileList) {
+    const selected = Array.from(fileList ?? []);
+    if (selected.length > 8) {
+      setError("Vous pouvez importer jusqu'à 8 photos.");
+      return;
+    }
+    if (selected.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) {
+      setError("Choisissez uniquement des photos JPEG, PNG ou WebP.");
+      return;
+    }
+    setError("");
+    setImages(selected);
+  }
+
   async function submit(event) {
     event.preventDefault();
     setSaving(true);
     setError("");
     try {
-      await onSave(values, image);
+      await onSave(values, images);
       if (!place) setValues(blankPlace);
-      setImage(null);
+      setImages([]);
     } catch (saveError) {
       setError(saveError.message);
     } finally {
@@ -66,12 +81,18 @@ export default function PlaceEditorForm({ place, kind, onSave, onCancel }) {
         <label className="text-xs font-medium text-slate-300">Recherche Google Maps<input className={inputClass} value={values.mapQuery} onChange={(event) => update("mapQuery", event.target.value)} placeholder={values.name || "Nom du lieu"} /></label>
         <label className="text-xs font-medium text-slate-300 sm:col-span-2">À savoir<textarea className={`${inputClass} min-h-20 py-3`} maxLength={500} value={values.note} onChange={(event) => update("note", event.target.value)} placeholder="Conseil ou information utile" /></label>
       </div>
-      <label className="flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-white/15 bg-white/[0.02] px-4 text-sm text-slate-300 transition hover:border-mint/40">
-        <ImagePlus size={20} className="text-mint" />
-        <span className="min-w-0 flex-1 truncate">{image?.name ?? (values.imageUrl ? "Remplacer la photo de couverture" : "Ajouter une photo de couverture")}</span>
-        <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setImage(event.target.files?.[0] ?? null)} />
+      <label
+        className={`flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-4 text-center text-sm transition ${dragging ? "border-mint bg-mint/[0.08] text-mint" : "border-white/15 bg-white/[0.02] text-slate-300 hover:border-mint/40"}`}
+        onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(event) => { event.preventDefault(); setDragging(false); selectImages(event.dataTransfer.files); }}
+      >
+        <ImagePlus size={22} className="text-mint" />
+        <span>{images.length ? `${images.length} nouvelle${images.length === 1 ? "" : "s"} photo${images.length === 1 ? "" : "s"} sélectionnée${images.length === 1 ? "" : "s"}` : "Déposez vos photos ou appuyez pour choisir"}</span>
+        <span className="text-xs text-muted">{values.imageUrls?.length ? "Choisir de nouvelles photos remplace la galerie actuelle" : "Jusqu'à 8 photos · JPEG, PNG ou WebP · 8 Mo max chacune"}</span>
+        <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectImages(event.target.files)} />
       </label>
-      {values.imageUrl && !image && <img src={values.imageUrl} alt={`Couverture de ${values.name}`} className="h-36 w-full rounded-2xl object-cover" />}
+      {values.imageUrls?.length > 0 && !images.length && <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{values.imageUrls.map((url) => <img key={url} src={url} alt={`Photo de ${values.name}`} className="h-24 w-full rounded-xl object-cover" />)}</div>}
       {error && <p role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-3 text-sm text-rose-200">{error}</p>}
       <Button type="submit" icon={Save} disabled={saving}>{saving ? "Enregistrement…" : place ? "Enregistrer les modifications" : "Ajouter l'adresse"}</Button>
     </form>

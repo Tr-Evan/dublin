@@ -1,18 +1,20 @@
 import { useMemo, useState } from "react";
-import { CalendarDays, Check, CloudUpload, LoaderCircle, LogIn, LogOut, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { CalendarDays, Check, CloudUpload, FileLock2, Images, ListChecks, LoaderCircle, LogIn, LogOut, Newspaper, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { useAdminAuth } from "../auth/AdminAuth";
 import { useLocationSharing } from "../auth/LocationSharing";
 import LocationSharingControl from "../components/admin/LocationSharingControl";
 import AdminTimeline from "../components/family/AdminTimeline";
+import DocumentVault from "../components/documents/DocumentVault";
 import PlaceEditorForm from "../components/admin/PlaceEditorForm";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import PlaceCard from "../components/ui/PlaceCard";
 import SectionHeading from "../components/ui/SectionHeading";
+import Checklist from "./Checklist";
 import usePlaces from "../hooks/usePlaces";
 import useSchedule from "../hooks/useSchedule";
 import { setActivityDate, setActivityVisited } from "../services/familyService";
-import { deletePlace, deletePlaceCover, savePlace, seedInitialPlaces, uploadPlaceCover } from "../services/placeService";
+import { deletePlace, deletePlaceImages, savePlace, seedInitialPlaces, uploadPlaceImages } from "../services/placeService";
 import { hasSupabaseConfig, supabase } from "../services/supabaseClient";
 
 const placeKinds = [
@@ -21,6 +23,12 @@ const placeKinds = [
   { key: "pub", label: "Pubs" },
 ];
 const dates = ["2026-10-20", "2026-10-21", "2026-10-22", "2026-10-23"];
+const adminTabs = [
+  { key: "places", label: "Lieux & Programme", icon: Images },
+  { key: "family", label: "Journal Famille", icon: Newspaper },
+  { key: "vault", label: "Coffre-fort", icon: FileLock2 },
+  { key: "checklist", label: "Checklist", icon: ListChecks },
+];
 function SignInForm({ onSignIn, authError }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,6 +66,7 @@ function AdminWorkspace({ auth }) {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
+  const [activeTab, setActiveTab] = useState("places");
   const visits = usePlaces("visite");
   const food = usePlaces("food");
   const pubs = usePlaces("pub");
@@ -67,33 +76,32 @@ function AdminWorkspace({ auth }) {
   const placeError = [visits.error, food.error, pubs.error].filter(Boolean).join(" ");
   const active = dataByKind[kind];
 
-  async function save(values, image) {
+  async function save(values, images) {
     setError("");
     setNotice("");
-    let uploadedPath = null;
+    let uploadedPaths = [];
     let committed = false;
     try {
-      if (image) {
-        if (image.size > 8 * 1024 * 1024) throw new Error("La photo de couverture ne peut pas dépasser 8 Mo.");
-        if (!["image/jpeg", "image/png", "image/webp"].includes(image.type)) throw new Error("Formats photo acceptés : JPEG, PNG ou WebP.");
-        uploadedPath = await uploadPlaceCover(image);
-      }
+      if (images.length) uploadedPaths = await uploadPlaceImages(images);
+      const previousPaths = values.imagePaths?.length ? values.imagePaths : values.imagePath ? [values.imagePath] : [];
+      const imagePaths = images.length ? uploadedPaths : previousPaths;
       const place = {
         ...values,
         id: editing?.id ?? crypto.randomUUID(),
-        imagePath: uploadedPath ?? values.imagePath ?? null,
+        imagePaths,
+        imagePath: imagePaths[0] ?? null,
       };
       const saved = await savePlace(place, kind);
       committed = true;
-      if (uploadedPath && values.imagePath && values.imagePath !== uploadedPath) await deletePlaceCover(values.imagePath);
+      if (images.length && previousPaths.length) await deletePlaceImages(previousPaths);
       await active.refresh();
       setEditing(null);
       setAdding(false);
       setNotice(`« ${saved.name} » a bien été enregistré.`);
     } catch (saveError) {
-      if (uploadedPath && !committed) {
+      if (uploadedPaths.length && !committed) {
         try {
-          await deletePlaceCover(uploadedPath);
+          await deletePlaceImages(uploadedPaths);
         } catch (cleanupError) {
           setError(`${saveError.message} La photo importée n'a pas pu être nettoyée : ${cleanupError.message}`);
           throw new Error(`${saveError.message} (la photo importée n'a pas pu être nettoyée)`);
@@ -176,15 +184,17 @@ function AdminWorkspace({ auth }) {
   return (
     <div className="space-y-10">
       <section className="flex flex-wrap items-start justify-between gap-4">
-        <div><Badge tone="mint" icon={ShieldCheck}>Session administrateur · {auth.session.user.email}</Badge><h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Le mode édition</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Gérez les adresses, le programme partagé et votre position familiale.</p><a href="/documents" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-mint hover:text-emerald-200"><CloudUpload size={16} />Ouvrir le coffre-fort</a></div>
+        <div><Badge tone="mint" icon={ShieldCheck}>Session administrateur · {auth.session.user.email}</Badge><h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Le mode édition</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Retrouvez vos outils dans les onglets ci-dessous : lieux, journal, coffre-fort et checklist.</p></div>
         <Button variant="secondary" icon={LogOut} onClick={() => void logOut()}>Déconnexion</Button>
       </section>
 
+      <nav aria-label="Sections d'administration" className="grid grid-cols-2 gap-2 rounded-3xl border border-white/[0.07] bg-white/[0.025] p-2 lg:grid-cols-4" role="tablist">
+        {adminTabs.map(({ key, label, icon: Icon }) => <button key={key} id={`admin-tab-${key}`} type="button" role="tab" aria-selected={activeTab === key} aria-controls={`admin-panel-${key}`} onClick={() => setActiveTab(key)} className={`flex min-h-12 items-center justify-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold transition ${activeTab === key ? "bg-mint/[0.12] text-mint shadow-glow" : "text-slate-400 hover:bg-white/[0.04] hover:text-white"}`}><Icon size={16} />{label}</button>)}
+      </nav>
+
+      {activeTab === "places" && <div id="admin-panel-places" role="tabpanel" aria-labelledby="admin-tab-places" className="space-y-8">
       <LocationSharingControl />
-
-      <AdminTimeline />
-
-      <section>
+      <section className="glass-card rounded-3xl p-5 sm:p-6">
         <SectionHeading eyebrow="Carnet partagé" title="Adresses du voyage" description="Les modifications sont enregistrées dans Supabase et apparaissent en direct chez votre famille." action={<Button icon={Plus} onClick={() => { setAdding(true); setEditing(null); }}>Ajouter</Button>} />
         <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Catégorie d'adresses">
           {placeKinds.map((item) => <button key={item.key} type="button" role="tab" aria-selected={kind === item.key} onClick={() => { setKind(item.key); setEditing(null); setAdding(false); }} className={`rounded-full border px-4 py-2 text-sm font-medium transition ${kind === item.key ? "border-mint/30 bg-mint/[0.1] text-mint" : "border-white/10 bg-white/[0.025] text-slate-400 hover:text-white"}`}>{item.label}<span className="ml-2 text-xs opacity-70">{dataByKind[item.key].places.length}</span></button>)}
@@ -217,6 +227,10 @@ function AdminWorkspace({ auth }) {
           })}
         </div>
       </section>
+      </div>}
+      {activeTab === "family" && <section id="admin-panel-family" role="tabpanel" aria-labelledby="admin-tab-family" className="glass-card rounded-3xl p-5 sm:p-6"><AdminTimeline /></section>}
+      {activeTab === "vault" && <section id="admin-panel-vault" role="tabpanel" aria-labelledby="admin-tab-vault" className="glass-card rounded-3xl p-5 sm:p-6"><DocumentVault /></section>}
+      {activeTab === "checklist" && <section id="admin-panel-checklist" role="tabpanel" aria-labelledby="admin-tab-checklist" className="glass-card rounded-3xl p-5 sm:p-6"><Checklist /></section>}
     </div>
   );
 }

@@ -1,5 +1,5 @@
-const weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=53.3498&longitude=-6.2603&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=1&timezone=Europe%2FDublin";
-const weatherCacheKey = "dublin-v3:weather";
+const weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=53.3498&longitude=-6.2603&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=7&timezone=Europe%2FDublin";
+const weatherCacheKey = "dublin-v4:weather";
 
 export const weatherConditions = {
   0: { label: "Ciel dégagé", icon: "sun" },
@@ -47,7 +47,7 @@ export async function getDublinWeather(signal) {
   const result = await response.json();
   const current = result.current;
   const forecast = result.daily;
-  if (!current || !forecast || !Array.isArray(forecast.time) || forecast.time.length === 0) {
+  if (!current || !forecast || !Array.isArray(forecast.time) || forecast.time.length < 7) {
     throw new Error("La réponse météo ne contient pas les prévisions attendues.");
   }
 
@@ -63,6 +63,12 @@ export async function getDublinWeather(signal) {
       maximum: Math.round(forecast.temperature_2m_max[0]),
       precipitationChance: forecast.precipitation_probability_max[0],
     },
+    forecast: forecast.time.map((date, index) => ({
+      date,
+      code: forecast.weather_code[index],
+      minimum: Math.round(forecast.temperature_2m_min[index]),
+      maximum: Math.round(forecast.temperature_2m_max[index]),
+    })),
     updatedAt: new Date().toISOString(),
   };
 

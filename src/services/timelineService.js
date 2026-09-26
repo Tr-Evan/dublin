@@ -15,11 +15,13 @@ export function getCachedFamilyUpdates() {
 }
 
 function normalizeUpdate(row) {
+  const imagePaths = row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : [];
+  const photoUrls = imagePaths.map((path) => supabase.storage.from(photoBucket).getPublicUrl(path).data.publicUrl);
   return {
     ...row,
-    photoUrl: row.image_path
-      ? supabase.storage.from(photoBucket).getPublicUrl(row.image_path).data.publicUrl
-      : null,
+    imagePaths,
+    photoUrls,
+    photoUrl: photoUrls[0] ?? null,
   };
 }
 
@@ -54,7 +56,7 @@ export async function getFamilyUpdates() {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("family_updates")
-    .select("id, travel_date, travel_time, title, description, image_path, created_at")
+    .select("id, travel_date, travel_time, title, description, image_path, image_paths, created_at")
     .order("travel_date", { ascending: true })
     .order("travel_time", { ascending: true })
     .order("created_at", { ascending: true });
@@ -69,20 +71,30 @@ export async function getFamilyUpdates() {
   return updates;
 }
 
-export async function publishFamilyUpdate({ travelDate, travelTime, title, description, photo, userId }) {
+export async function publishFamilyUpdate({ travelDate, travelTime, title, description, photos = [], userId }) {
   if (!supabase) throw new Error("Configurez Supabase pour publier dans le journal de bord.");
   const cleanedTitle = title.trim();
   if (!cleanedTitle || cleanedTitle.length > 120) throw new Error("Le titre doit contenir entre 1 et 120 caractères.");
 
-  let imagePath = null;
-  if (photo) {
-    const preparedPhoto = await prepareFamilyPhoto(photo);
-    imagePath = `${userId}/${crypto.randomUUID()}.jpg`;
-    const { error } = await supabase.storage.from(photoBucket).upload(imagePath, preparedPhoto, {
-      contentType: preparedPhoto.type,
-      upsert: false,
-    });
-    if (error) throw new Error(`La photo n'a pas pu être importée : ${error.message}`);
+  if (photos.length > 8) throw new Error("Vous pouvez publier jusqu'à 8 photos par souvenir.");
+  const imagePaths = [];
+  try {
+    for (const photo of photos) {
+      const preparedPhoto = await prepareFamilyPhoto(photo);
+      const imagePath = `${userId}/${crypto.randomUUID()}.jpg`;
+      const { error } = await supabase.storage.from(photoBucket).upload(imagePath, preparedPhoto, {
+        contentType: preparedPhoto.type,
+        upsert: false,
+      });
+      if (error) throw new Error(`Une photo n'a pas pu être importée : ${error.message}`);
+      imagePaths.push(imagePath);
+    }
+  } catch (uploadError) {
+    if (imagePaths.length) {
+      const { error: cleanupError } = await supabase.storage.from(photoBucket).remove(imagePaths);
+      if (cleanupError) throw new Error(`${uploadError.message} Les photos déjà importées n'ont pas pu être nettoyées : ${cleanupError.message}`);
+    }
+    throw uploadError;
   }
 
   const { data, error } = await supabase
@@ -92,14 +104,15 @@ export async function publishFamilyUpdate({ travelDate, travelTime, title, descr
       travel_time: travelTime,
       title: cleanedTitle,
       description: description.trim(),
-      image_path: imagePath,
+      image_path: imagePaths[0] ?? null,
+      image_paths: imagePaths,
       created_by: userId,
     })
-    .select("id, travel_date, travel_time, title, description, image_path, created_at")
+    .select("id, travel_date, travel_time, title, description, image_path, image_paths, created_at")
     .single();
   if (error) {
-    if (imagePath) {
-      const { error: cleanupError } = await supabase.storage.from(photoBucket).remove([imagePath]);
+    if (imagePaths.length) {
+      const { error: cleanupError } = await supabase.storage.from(photoBucket).remove(imagePaths);
       if (cleanupError) throw new Error(`${error.message} La photo importée n'a pas pu être nettoyée : ${cleanupError.message}`);
     }
     throw new Error(error.message);
@@ -112,8 +125,9 @@ export async function removeFamilyUpdate(update) {
   const { error } = await supabase.from("family_updates").delete().eq("id", update.id);
   if (error) throw new Error(error.message);
 
-  if (update.image_path) {
-    const { error: photoError } = await supabase.storage.from(photoBucket).remove([update.image_path]);
+  const imagePaths = update.image_paths?.length ? update.image_paths : update.image_path ? [update.image_path] : [];
+  if (imagePaths.length) {
+    const { error: photoError } = await supabase.storage.from(photoBucket).remove(imagePaths);
     if (photoError) throw new Error(`Publication supprimée, mais la photo n'a pas pu être supprimée : ${photoError.message}`);
   }
 }

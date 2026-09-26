@@ -11,7 +11,7 @@ export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
   const [time, setTime] = useState(new Intl.DateTimeFormat("fr-CA", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Dublin", hourCycle: "h23" }).format(new Date()));
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [photo, setPhoto] = useState(null);
+  const [photos, setPhotos] = useState([]);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -21,7 +21,7 @@ export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
     setBusy(true);
     setError("");
     try {
-      const update = await publishFamilyUpdate({ travelDate: date, travelTime: time, title, description, photo, userId });
+      const update = await publishFamilyUpdate({ travelDate: date, travelTime: time, title, description, photos, userId });
       onPublished(update);
       onClose();
     } catch (publishError) {
@@ -31,13 +31,18 @@ export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
     }
   }
 
-  function setPhotoFile(file) {
+  function setPhotoFiles(files) {
     setError("");
-    if (file && !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setError("Choisissez une photo JPEG, PNG ou WebP.");
+    const selected = Array.from(files ?? []);
+    if (selected.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) {
+      setError("Choisissez uniquement des photos JPEG, PNG ou WebP.");
       return;
     }
-    setPhoto(file);
+    if (selected.length > 8) {
+      setError("Vous pouvez sélectionner jusqu'à 8 photos.");
+      return;
+    }
+    setPhotos(selected);
   }
 
   return (
@@ -58,14 +63,14 @@ export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
             className={`flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-5 text-center transition ${dragging ? "border-mint bg-mint/[0.08]" : "border-white/20 bg-white/[0.025] hover:border-mint/45"} ${photo ? "text-mint" : "text-slate-300"}`}
             onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
-            onDrop={(event) => { event.preventDefault(); setDragging(false); setPhotoFile(event.dataTransfer.files?.[0] ?? null); }}
+            onDrop={(event) => { event.preventDefault(); setDragging(false); setPhotoFiles(event.dataTransfer.files); }}
           >
             <ImagePlus size={22} className="text-mint" />
-            <span className="text-sm font-medium">{photo ? photo.name : "Glissez une photo ici ou appuyez pour choisir"}</span>
-            <span className="text-xs text-muted">{photo ? `${(photo.size / 1024 / 1024).toFixed(1)} Mo · JPEG, PNG ou WebP` : "Photo optimisée pour un partage rapide · 12 Mo max"}</span>
-            <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setPhotoFile(event.target.files?.[0] ?? null)} />
+            <span className="text-sm font-medium">{photos.length ? `${photos.length} photo${photos.length === 1 ? "" : "s"} sélectionnée${photos.length === 1 ? "" : "s"}` : "Glissez vos photos ici ou appuyez pour choisir"}</span>
+            <span className="text-xs text-muted">{photos.length ? photos.map((photo) => photo.name).join(" · ") : "Jusqu'à 8 photos · Optimisées avant partage"}</span>
+            <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => setPhotoFiles(event.target.files)} />
           </label>
-          {!photo && <p className="flex items-center gap-2 text-xs text-muted"><CalendarDays size={14} className="text-mint" />Une photo est facultative : le souvenir peut être publié sans image.</p>}
+          {!photos.length && <p className="flex items-center gap-2 text-xs text-muted"><CalendarDays size={14} className="text-mint" />Les photos sont facultatives : le souvenir peut aussi être publié sans image.</p>}
           {error && <p role="alert" className="rounded-xl border border-rose-400/20 bg-rose-400/[0.06] p-3 text-sm text-rose-200">{error}</p>}
           <div className="flex flex-wrap justify-end gap-3 border-t border-white/[0.07] pt-4">
             <Button type="button" variant="secondary" disabled={busy} onClick={onClose}>Annuler</Button>

@@ -112,6 +112,42 @@ create table if not exists public.family_updates (
   updated_at timestamptz not null default now()
 );
 
+alter table public.places
+  add column if not exists image_paths text[] not null default '{}';
+
+update public.places
+set image_paths = array[image_path]
+where image_path is not null and cardinality(image_paths) = 0;
+
+alter table public.family_updates
+  add column if not exists image_paths text[] not null default '{}';
+
+update public.family_updates
+set image_paths = array[image_path]
+where image_path is not null and cardinality(image_paths) = 0;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'places_image_paths_max_count'
+      and conrelid = 'public.places'::regclass
+  ) then
+    alter table public.places
+      add constraint places_image_paths_max_count check (cardinality(image_paths) <= 8);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'family_updates_image_paths_max_count'
+      and conrelid = 'public.family_updates'::regclass
+  ) then
+    alter table public.family_updates
+      add constraint family_updates_image_paths_max_count check (cardinality(image_paths) <= 8);
+  end if;
+end;
+$$;
+
 drop trigger if exists places_set_updated_at on public.places;
 create trigger places_set_updated_at
 before insert or update on public.places
