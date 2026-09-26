@@ -3,6 +3,7 @@ import { CalendarDays, Check, CloudUpload, LoaderCircle, LogIn, LogOut, Pencil, 
 import { useAdminAuth } from "../auth/AdminAuth";
 import { useLocationSharing } from "../auth/LocationSharing";
 import LocationSharingControl from "../components/admin/LocationSharingControl";
+import AdminTimeline from "../components/family/AdminTimeline";
 import PlaceEditorForm from "../components/admin/PlaceEditorForm";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
@@ -180,6 +181,8 @@ function AdminWorkspace({ auth }) {
       </section>
 
       <LocationSharingControl />
+
+      <AdminTimeline />
 
       <section>
         <SectionHeading eyebrow="Carnet partagé" title="Adresses du voyage" description="Les modifications sont enregistrées dans Supabase et apparaissent en direct chez votre famille." action={<Button icon={Plus} onClick={() => { setAdding(true); setEditing(null); }}>Ajouter</Button>} />

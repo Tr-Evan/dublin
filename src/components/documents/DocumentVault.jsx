@@ -21,6 +21,7 @@ export default function DocumentVault() {
   const [busy, setBusy] = useState("");
   const [offline, setOffline] = useState(false);
   const [preview, setPreview] = useState(null);
+  const [slotFiles, setSlotFiles] = useState({});
 
   const refresh = useCallback(async () => {
     try {
@@ -84,15 +85,16 @@ export default function DocumentVault() {
     setTitle("");
   }
 
-  async function handleUpload(event, documentTitle, slotKey, busyKey) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const file = form.querySelector('input[type="file"]').files?.[0];
+  async function handleUpload(event, documentTitle, slotKey, busyKey, selectedFile = null) {
+    event?.preventDefault();
+    const form = event?.currentTarget;
+    const file = selectedFile ?? form?.querySelector('input[type="file"]')?.files?.[0];
     setBusy(busyKey);
     setError("");
     try {
       await upload({ file, documentTitle, slotKey });
-      form.reset();
+      if (form) form.reset();
+      if (slotKey) setSlotFiles((current) => ({ ...current, [slotKey]: null }));
     } catch (uploadError) {
       setError(uploadError.message);
     } finally {
@@ -183,16 +185,10 @@ export default function DocumentVault() {
             return (
               <form key={slot.key} onSubmit={(event) => void handleUpload(event, slot.title, slot.key, slot.key)} className="glass-card rounded-3xl p-4">
                 <h3 className="mb-3 text-sm font-semibold text-white">{slot.title}</h3>
-                {existing ? renderDocument(existing) : (
-                  <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 text-xs text-muted transition hover:border-mint/40 hover:text-mint">
-                    <Upload size={19} />
-                    Choisir un billet (PDF ou image)
-                    <input className="sr-only" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" />
-                  </label>
-                )}
+                {existing ? renderDocument(existing) : <UploadDropzone selectedFile={slotFiles[slot.key]} disabled={offline} onFile={(file) => setSlotFiles((current) => ({ ...current, [slot.key]: file }))} />}
                 {existing
-                  ? <label className={`mt-3 block text-xs text-mint hover:text-emerald-200 ${offline ? "pointer-events-none opacity-40" : "cursor-pointer"}`}>Remplacer ce billet<input className="sr-only" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" disabled={offline} onChange={(event) => { const file = event.target.files?.[0]; if (file) { const form = event.target.form; setBusy(slot.key); void upload({ file, documentTitle: slot.title, slotKey: slot.key }).then(refresh).catch((uploadError) => setError(uploadError.message)).finally(() => setBusy("")); form.reset(); } }} /></label>
-                  : <Button type="submit" icon={busy === slot.key ? LoaderCircle : Upload} variant="secondary" className="mt-3 w-full" disabled={busy === slot.key}>{busy === slot.key ? "Importation…" : "Importer le billet"}</Button>}
+                  ? <UploadDropzone compact selectedFile={slotFiles[slot.key]} disabled={offline || busy === slot.key} onFile={(file) => { setSlotFiles((current) => ({ ...current, [slot.key]: file })); void handleUpload(null, slot.title, slot.key, slot.key, file); }} />
+                  : <Button type="button" icon={busy === slot.key ? LoaderCircle : Upload} variant="secondary" className="mt-3 w-full" disabled={offline || busy === slot.key || !slotFiles[slot.key]} onClick={() => void handleUpload(null, slot.title, slot.key, slot.key, slotFiles[slot.key])}>{busy === slot.key ? "Importation…" : "Importer le billet"}</Button>}
               </form>
             );
           })}
@@ -200,10 +196,10 @@ export default function DocumentVault() {
       </section>
 
       <section>
-        <div className="mb-4 flex items-center gap-3"><Plus size={19} className="text-mint" /><h2 className="text-lg font-semibold text-white">Upload libre</h2></div>
+        <div className="mb-4 flex items-center gap-3"><Plus size={19} className="text-mint" /><h2 className="text-lg font-semibold text-white">Autres documents</h2></div>
         <form onSubmit={(event) => void handleUpload(event, title, null, "free")} className="glass-card grid gap-3 rounded-3xl p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
           <label className="text-xs font-medium text-slate-300">Nom du document<input required maxLength={120} value={title} disabled={offline} onChange={(event) => setTitle(event.target.value)} placeholder="Réservation Trinity College" className="mt-2 min-h-11 w-full rounded-xl border border-white/10 bg-ink/80 px-3 text-sm text-white outline-none focus:border-mint/40" /></label>
-          <label className="text-xs font-medium text-slate-300">Fichier (PDF, JPEG, PNG, WebP)<input required type="file" disabled={offline} accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(event) => setFreeFile(event.target.files?.[0] ?? null)} className="mt-2 block min-h-11 w-full text-xs text-slate-300 file:mr-3 file:rounded-xl file:border-0 file:bg-white/[0.08] file:px-3 file:py-2 file:text-xs file:font-medium file:text-white" /></label>
+          <UploadDropzone selectedFile={freeFile} disabled={offline || busy === "free"} onFile={setFreeFile} />
           <Button type="submit" icon={busy === "free" ? LoaderCircle : Upload} disabled={offline || busy === "free" || !freeFile}>{busy === "free" ? "Importation…" : "Importer"}</Button>
         </form>
       </section>
@@ -225,5 +221,26 @@ export default function DocumentVault() {
         </div>
       )}
     </div>
+  );
+}
+
+function UploadDropzone({ selectedFile, onFile, disabled = false, compact = false }) {
+  const [dragging, setDragging] = useState(false);
+  return (
+    <label
+      className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed text-center transition ${compact ? "mt-3 min-h-16 px-3 py-2" : "min-h-28 p-4"} ${dragging ? "border-mint bg-mint/[0.08]" : "border-white/20 bg-white/[0.025] hover:border-mint/45"} ${disabled ? "pointer-events-none opacity-50" : ""}`}
+      onDragOver={(event) => { event.preventDefault(); if (!disabled) setDragging(true); }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(event) => {
+        event.preventDefault();
+        setDragging(false);
+        if (!disabled) onFile(event.dataTransfer.files?.[0] ?? null);
+      }}
+    >
+      <Upload size={compact ? 16 : 20} className="text-mint" />
+      <span className="max-w-full truncate text-xs font-medium text-slate-200">{selectedFile?.name ?? "Glissez votre fichier ici ou appuyez pour le choisir"}</span>
+      {!compact && <span className="text-[11px] text-muted">{selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(1)} Mo` : "PDF, JPEG, PNG ou WebP · 15 Mo max"}</span>}
+      <input className="sr-only" type="file" disabled={disabled} accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(event) => onFile(event.target.files?.[0] ?? null)} />
+    </label>
   );
 }

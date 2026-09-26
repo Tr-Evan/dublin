@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, CloudRain, Plane, Sparkles, Sun, Umbrella } from "lucide-react";
+import { ArrowRight, Plane, Sparkles, Umbrella } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trip } from "../data/itineraryData";
 import dublinSkyline from "../assets/dublin-skyline.svg";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import SectionHeading from "../components/ui/SectionHeading";
+import WeatherWidget from "../components/weather/WeatherWidget";
 
 function useCountdown(targetDate) {
   const [now, setNow] = useState(() => Date.now());
@@ -50,12 +51,12 @@ export default function Home() {
         <div className="relative z-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
           <div>
             <Badge tone="mint" icon={Sparkles}>{trip.datesLabel}</Badge>
-            <p className="mt-7 text-sm font-medium uppercase tracking-[0.24em] text-mint">Ireland is calling</p>
+            <p className="mt-7 text-sm font-medium uppercase tracking-[0.24em] text-mint">L'Irlande nous appelle</p>
             <h1 className="mt-3 max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-6xl">
-              Dublin,<br /><span className="text-mint">entre frère & sœurs.</span>
+              Dublin,<br /><span className="text-mint">avec ma sœur.</span>
             </h1>
             <p className="mt-5 max-w-lg text-sm leading-7 text-slate-300 sm:text-base">
-              Quatre jours de belles histoires, de comfort food et de musique au coin du feu. Votre petite boussole pour profiter de la ville.
+              Quatre jours de belles histoires, de bons petits plats et de musique au coin du feu. Votre petite boussole pour profiter de Dublin.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Button href="/visites" icon={ArrowRight}>Explorer le carnet</Button>
@@ -99,15 +100,7 @@ export default function Home() {
             </div>
             <Button href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(trip.hotel.name)}`} icon={ArrowRight} variant="secondary" target="_blank" rel="noreferrer">Voir sur la carte</Button>
           </div>
-          <div className="glass-card flex items-center gap-4 rounded-3xl p-5 sm:p-6">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-sky-300/[0.1] text-sky-200"><CloudRain size={23} /></span>
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted">Météo indicative</p>
-              <p className="mt-1 text-2xl font-semibold text-white">{trip.weather.low}° — {trip.weather.high}°C</p>
-              <p className="mt-1 text-xs text-slate-400">{trip.weather.note}</p>
-            </div>
-            <Sun className="ml-auto hidden text-amber-200 sm:block" size={20} />
-          </div>
+          <WeatherWidget />
         </div>
       </section>
 
@@ -122,7 +115,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-        <div className="mt-5 flex justify-end"><Link to="/visites" className="text-sm font-semibold text-mint hover:text-emerald-200">Tous les conseils transport <ArrowRight className="ml-1 inline" size={15} /></Link></div>
+        <div className="mt-5 flex justify-end"><Link to="/checklist" className="text-sm font-semibold text-mint hover:text-emerald-200">Ouvrir la checklist valise <ArrowRight className="ml-1 inline" size={15} /></Link></div>
       </section>
     </div>
   );

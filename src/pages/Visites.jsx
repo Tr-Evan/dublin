@@ -43,10 +43,7 @@ export default function Visites() {
         </p>
       </section>
       <section>
-        <SectionHeading eyebrow="À glisser dans la valise" title="Checklist de départ" />
-        <div className="grid gap-2 sm:grid-cols-2">
-          {trip.checklist.map((item) => <p key={item} className="glass-card flex items-center gap-3 rounded-2xl p-4 text-sm text-slate-300"><span className="h-2 w-2 rounded-full bg-mint" />{item}</p>)}
-        </div>
+        <SectionHeading eyebrow="Avant le départ" title="Les petits essentiels" description="Coupe-vent, adaptateur et réservations : retrouvez la liste complète dans votre checklist." action={<a href="/checklist" className="whitespace-nowrap text-sm font-semibold text-mint hover:text-emerald-200">Préparer la valise →</a>} />
       </section>
     </div>
   );

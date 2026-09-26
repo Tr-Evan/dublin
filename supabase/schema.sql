@@ -89,6 +89,29 @@ create table if not exists public.travel_documents (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.departure_checklist (
+  id uuid primary key default gen_random_uuid(),
+  title text not null check (char_length(title) between 1 and 120),
+  description text not null default '' check (char_length(description) <= 400),
+  is_done boolean not null default false,
+  sort_order integer not null default 0,
+  created_by uuid not null default auth.uid() references auth.users (id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.family_updates (
+  id uuid primary key default gen_random_uuid(),
+  travel_date date not null check (travel_date between date '2026-10-20' and date '2026-10-23'),
+  travel_time time not null,
+  title text not null check (char_length(title) between 1 and 120),
+  description text not null default '' check (char_length(description) <= 1200),
+  image_path text,
+  created_by uuid not null default auth.uid() references auth.users (id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 drop trigger if exists places_set_updated_at on public.places;
 create trigger places_set_updated_at
 before insert or update on public.places
@@ -104,11 +127,23 @@ create trigger family_locations_set_updated_at
 before insert or update on public.family_locations
 for each row execute function public.set_updated_at();
 
+drop trigger if exists departure_checklist_set_updated_at on public.departure_checklist;
+create trigger departure_checklist_set_updated_at
+before insert or update on public.departure_checklist
+for each row execute function public.set_updated_at();
+
+drop trigger if exists family_updates_set_updated_at on public.family_updates;
+create trigger family_updates_set_updated_at
+before insert or update on public.family_updates
+for each row execute function public.set_updated_at();
+
 alter table public.trip_admins enable row level security;
 alter table public.places enable row level security;
 alter table public.day_schedule enable row level security;
 alter table public.family_locations enable row level security;
 alter table public.travel_documents enable row level security;
+alter table public.departure_checklist enable row level security;
+alter table public.family_updates enable row level security;
 
 drop policy if exists "Trip admins can read their own membership" on public.trip_admins;
 create policy "Trip admins can read their own membership"
@@ -154,15 +189,41 @@ on public.travel_documents for all to authenticated
 using ((select public.is_trip_admin()))
 with check ((select public.is_trip_admin()));
 
+drop policy if exists "Only trip admins manage the departure checklist" on public.departure_checklist;
+create policy "Only trip admins manage the departure checklist"
+on public.departure_checklist for all to authenticated
+using ((select public.is_trip_admin()))
+with check ((select public.is_trip_admin()));
+
+drop policy if exists "Family can read travel updates" on public.family_updates;
+create policy "Family can read travel updates"
+on public.family_updates for select to anon, authenticated
+using (true);
+
+drop policy if exists "Trip admins publish travel updates" on public.family_updates;
+create policy "Trip admins publish travel updates"
+on public.family_updates for insert to authenticated
+with check ((select public.is_trip_admin()) and created_by = (select auth.uid()));
+
+drop policy if exists "Trip admins delete travel updates" on public.family_updates;
+create policy "Trip admins delete travel updates"
+on public.family_updates for delete to authenticated
+using ((select public.is_trip_admin()));
+
 grant select on public.places, public.day_schedule, public.family_locations to anon, authenticated;
+grant select on public.family_updates to anon, authenticated;
 grant insert, update, delete on public.places, public.day_schedule, public.family_locations to authenticated;
 grant select, insert, update, delete on public.trip_admins, public.travel_documents to authenticated;
+grant select, insert, update, delete on public.departure_checklist to authenticated;
+grant insert, delete on public.family_updates to authenticated;
 revoke all on public.trip_admins, public.travel_documents from anon;
+revoke all on public.departure_checklist from anon;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values
   ('place-covers', 'place-covers', true, 8388608, array['image/jpeg', 'image/png', 'image/webp']),
-  ('travel-documents', 'travel-documents', false, 15728640, array['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
+  ('travel-documents', 'travel-documents', false, 15728640, array['application/pdf', 'image/jpeg', 'image/png', 'image/webp']),
+  ('family-updates', 'family-updates', true, 5242880, array['image/jpeg'])
 on conflict (id) do update set
   public = excluded.public,
   file_size_limit = excluded.file_size_limit,
@@ -204,6 +265,21 @@ create policy "Trip admins delete private travel documents"
 on storage.objects for delete to authenticated
 using (bucket_id = 'travel-documents' and (select public.is_trip_admin()));
 
+drop policy if exists "Family can read shared travel photos" on storage.objects;
+create policy "Family can read shared travel photos"
+on storage.objects for select to anon, authenticated
+using (bucket_id = 'family-updates');
+
+drop policy if exists "Trip admins upload shared travel photos" on storage.objects;
+create policy "Trip admins upload shared travel photos"
+on storage.objects for insert to authenticated
+with check (bucket_id = 'family-updates' and (select public.is_trip_admin()));
+
+drop policy if exists "Trip admins delete shared travel photos" on storage.objects;
+create policy "Trip admins delete shared travel photos"
+on storage.objects for delete to authenticated
+using (bucket_id = 'family-updates' and (select public.is_trip_admin()));
+
 do $$
 begin
   alter publication supabase_realtime add table public.places;
@@ -221,6 +297,20 @@ $$;
 do $$
 begin
   alter publication supabase_realtime add table public.family_locations;
+exception when duplicate_object then null;
+end;
+$$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.family_updates;
+exception when duplicate_object then null;
+end;
+$$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.departure_checklist;
 exception when duplicate_object then null;
 end;
 $$;

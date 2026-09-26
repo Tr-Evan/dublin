@@ -31,6 +31,25 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
+          {
+            urlPattern: /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/family-updates\//,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "dublin-family-memories",
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 14 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/api\.open-meteo\.com\/v1\/forecast/,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "dublin-live-weather",
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 8, maxAgeSeconds: 60 * 60 * 24 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
     }),
