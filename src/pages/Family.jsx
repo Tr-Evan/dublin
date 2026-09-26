@@ -41,8 +41,8 @@ export default function Family() {
       <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="hero-panel relative overflow-hidden rounded-[2rem] p-6 sm:p-9">
         <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-mint/[0.09] blur-3xl" />
         <div className="relative">
-          <Badge tone="mint" icon={Sparkles}>Un petit coucou de Dublin</Badge>
-          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">Evan & sa sœur, Enola.</h1>
+          <Badge tone="mint" icon={Sparkles}>Evan & Enola.</Badge>
+          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">Un petit coucou de Dublin</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Quatre jours de découvertes à Dublin. Retrouvez leurs photos et petits mots au fil de la journée.</p>
           <p className="mt-3 flex items-center gap-2 text-xs text-slate-400"><LockKeyhole size={14} className="text-mint" />La position n'apparaît que si Evan ou Enola active volontairement le partage.</p>
         </div>

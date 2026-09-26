@@ -53,7 +53,7 @@ export default function Home() {
             <Badge tone="mint" icon={Sparkles}>{trip.datesLabel}</Badge>
             <p className="mt-7 text-sm font-medium uppercase tracking-[0.24em] text-mint">L'Irlande nous appelle</p>
             <h1 className="mt-3 max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-6xl">
-              Dublin,<br /><span className="text-mint">avec ma sœur.</span>
+              Dublin,<br /><span className="text-mint">avec la fratrie Troget.</span>
             </h1>
             <p className="mt-5 max-w-lg text-sm leading-7 text-slate-300 sm:text-base">
               Quatre jours de belles histoires, de bons petits plats et de musique au coin du feu. Votre petite boussole pour profiter de Dublin.

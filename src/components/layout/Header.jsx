@@ -8,8 +8,8 @@ export default function Header() {
         <a href="/" className="flex items-center gap-3" aria-label="Dublin, accueil">
           <span className="grid h-10 w-10 place-items-center rounded-2xl border border-mint/20 bg-mint/10 text-lg">☘</span>
           <span>
-            <span className="block text-sm font-semibold text-white">Dublin avec ma sœur</span>
-            <span className="hidden text-xs text-muted sm:block">Evan & Enola · le carnet du voyage</span>
+            <span className="block text-sm font-semibold text-white">Dublin avec la fratrie Troget</span>
+            <span className="hidden text-xs text-muted sm:block">Enola & Evan · le carnet du voyage</span>
           </span>
         </a>
         <div className="hidden items-center gap-5 text-xs font-medium text-slate-300 sm:flex">

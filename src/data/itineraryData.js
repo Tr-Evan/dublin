@@ -1,5 +1,5 @@
 export const trip = {
-  title: "Dublin avec ma sœur · Evan & Enola",
+  title: "Dublin avec la fratrie Troget · Enola & Evan",
   startDate: "2026-10-20T18:10:00",
   endDate: "2026-10-23T17:10:00",
   datesLabel: "20 — 23 octobre 2026",
