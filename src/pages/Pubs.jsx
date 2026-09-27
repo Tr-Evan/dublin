@@ -3,12 +3,14 @@ import { Music2 } from "lucide-react";
 import PlaceCard from "../components/ui/PlaceCard";
 import SectionHeading from "../components/ui/SectionHeading";
 import Badge from "../components/ui/Badge";
+import BackToProgramme from "../components/ui/BackToProgramme";
 import usePlaces from "../hooks/usePlaces";
 
 export default function Pubs() {
   const { places, loading, error } = usePlaces("pub");
   return (
-    <div>
+    <div className="space-y-8">
+      <BackToProgramme />
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <Badge tone="rose" icon={Music2}>Trad sessions · musique live</Badge>
         <SectionHeading eyebrow="Ce soir, on sort" title="L'âme des pubs irlandais" description="Un pub historique, des musiciens locaux et l'icône rouge de Temple Bar : à chacune son ambiance." />

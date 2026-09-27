@@ -11,6 +11,7 @@ export default defineConfig({
       includeAssets: ["icons/dublin-mark.svg", "icons/apple-touch-icon.png", "manifest.json"],
       workbox: {
         navigateFallback: "/index.html",
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,svg,ico,png,jpg,jpeg,webp,json,woff,woff2}"],
         runtimeCaching: [
           {

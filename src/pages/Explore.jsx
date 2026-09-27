@@ -3,9 +3,9 @@ import { ArrowUpRight, Camera, Coffee, Martini, Utensils } from "lucide-react";
 import { Link } from "react-router-dom";
 import Badge from "../components/ui/Badge";
 import SectionHeading from "../components/ui/SectionHeading";
-import foodImage from "../assets/explore-food.svg";
-import pubsImage from "../assets/explore-pubs.svg";
-import visitsImage from "../assets/explore-visits.svg";
+import foodImage from "../assets/foods.png";
+import pubsImage from "../assets/pubs.png";
+import visitsImage from "../assets/visites.png";
 
 const categories = [
   {
@@ -14,7 +14,7 @@ const categories = [
     subtitle: "Culture, histoire & incontournables",
     image: visitsImage,
     icon: Camera,
-    imageAlt: "Illustration de l'architecture historique de Dublin",
+    imageAlt: "Vue aérienne du centre de Dublin",
   },
   {
     to: "/food",
@@ -22,7 +22,7 @@ const categories = [
     subtitle: "Bonnes tables & pauses gourmandes",
     image: foodImage,
     icon: Utensils,
-    imageAlt: "Illustration d'un repas dans une assiette",
+    imageAlt: "Plat irlandais servi dans une assiette",
   },
   {
     to: "/pubs",
@@ -30,7 +30,7 @@ const categories = [
     subtitle: "Adresses chaleureuses & musique live",
     image: pubsImage,
     icon: Martini,
-    imageAlt: "Illustration de la façade d'un pub irlandais",
+    imageAlt: "Façade du Temple Bar à Dublin",
   },
 ];
 
@@ -61,7 +61,7 @@ export default function Explore() {
         <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-mint/[0.09] blur-3xl" />
         <div className="relative">
           <Badge tone="mint" icon={Coffee}>Le carnet de Dublin</Badge>
-          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">On explore ?</h1>
+          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">Le programme de Dublin</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Toutes les idées de sorties, de bonnes tables et de pubs réunies au même endroit.</p>
         </div>
       </section>

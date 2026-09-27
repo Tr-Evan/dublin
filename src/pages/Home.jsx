@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ClipboardCheck, FileLock2, Plane, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowRight, ClipboardCheck, Plane, Sparkles } from "lucide-react";
 import { trip } from "../data/itineraryData";
 import dublinSkyline from "../assets/dublin-skyline.svg";
 import hotelImage from "../assets/DUBSTGREFL-chambre-deluxe-superieure-riu-plaza-the-gresham-dublin-sejour-a-dublin-tui.png";
@@ -9,7 +8,6 @@ import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import SectionHeading from "../components/ui/SectionHeading";
 import WeatherWidget from "../components/weather/WeatherWidget";
-import ChecklistPreview from "../components/checklist/ChecklistPreview";
 
 function useCountdown(targetDate) {
   const [now, setNow] = useState(() => Date.now());
@@ -72,9 +70,6 @@ export default function Home() {
             <p className="mt-5 max-w-lg text-sm leading-7 text-slate-300 sm:text-base">
               Quatre jours de découvertes, de bonnes adresses et de musique au coin du feu. Le carnet partagé pour explorer Dublin.
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Button href="/explorer" icon={ArrowRight}>Explorer le carnet</Button>
-            </div>
           </div>
           <div className="rounded-3xl border border-white/10 bg-ink/50 p-5 shadow-glow backdrop-blur-xl sm:p-6">
             <div className="flex items-center justify-between gap-4">
@@ -114,20 +109,19 @@ export default function Home() {
               <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/5 via-black/10 to-black/55" aria-hidden="true" />
               <HotelDetails className="gradient-blur relative z-10 mt-auto w-full p-5 backdrop-blur-md sm:p-6" />
             </article>
-            <div className="grid grid-cols-2 gap-3">
-              <Link to="/checklist" className="group flex min-h-14 items-center justify-between gap-2 rounded-2xl border border-mint/20 bg-mint/[0.07] px-4 py-3 text-sm font-semibold text-mint transition hover:bg-mint/[0.12]">
-                <span className="flex items-center gap-2"><ClipboardCheck size={18} />Checklist</span><ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <Link to="/documents" className="group flex min-h-14 items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.07]">
-                <span className="flex items-center gap-2"><FileLock2 size={18} />Billets</span><ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
-              </Link>
-            </div>
           </div>
           <WeatherWidget />
         </div>
       </section>
 
-      <ChecklistPreview />
+      <section aria-labelledby="preparatifs-title" className="glass-card rounded-3xl p-5 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.17em] text-mint">Avant le départ</p>
+          <h2 id="preparatifs-title" className="mt-2 text-xl font-semibold text-white">Les préparatifs</h2>
+          <p className="mt-1 text-sm leading-6 text-slate-400">La checklist partagée des essentiels à acheter et à emporter.</p>
+        </div>
+        <Button className="mt-4 w-full sm:mt-0 sm:w-auto" href="/checklist" icon={ClipboardCheck}>Ouvrir la checklist</Button>
+      </section>
     </div>
   );
 }

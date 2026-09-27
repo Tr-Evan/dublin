@@ -40,7 +40,8 @@ function AppContent() {
             <Suspense fallback={<RouteLoader />}>
               <Routes location={location}>
                 <Route path="/" element={<Home />} />
-                <Route path="/explorer" element={<Explore />} />
+                <Route path="/programme" element={<Explore />} />
+                <Route path="/explorer" element={<Navigate to="/programme" replace />} />
                 <Route path="/visites" element={<Visites />} />
                 <Route path="/food" element={<Food />} />
                 <Route path="/pubs" element={<Pubs />} />
