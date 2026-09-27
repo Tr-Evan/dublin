@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Plane, Sparkles } from "lucide-react";
+import { ArrowRight, ClipboardCheck, FileLock2, Plane, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trip } from "../data/itineraryData";
 import dublinSkyline from "../assets/dublin-skyline.svg";
@@ -41,6 +41,18 @@ function FlightCard({ label, time, date, detail, icon: Icon }) {
   );
 }
 
+function HotelDetails({ className = "" }) {
+  return (
+    <div className={className}>
+      <p className="text-xs font-semibold uppercase tracking-[0.17em] text-mint">{trip.datesLabel} · Hébergement partagé</p>
+      <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">{trip.hotel.name}</h3>
+      <p className="mt-2 text-sm text-slate-200">{trip.hotel.address}</p>
+      <p className="mt-2 text-xs leading-5 text-slate-300">Point de départ idéal, à proximité des principales adresses du centre-ville.</p>
+      <Button className="mt-4" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(trip.hotel.name)}`} icon={ArrowRight} variant="secondary" target="_blank" rel="noreferrer">Voir l’itinéraire</Button>
+    </div>
+  );
+}
+
 export default function Home() {
   const countdown = useCountdown(trip.startDate);
   const countdownLabel = countdown.ended ? "Le séjour est terminé" : countdown.started ? "Profitez bien de Dublin !" : "avant le départ";
@@ -61,8 +73,7 @@ export default function Home() {
               Quatre jours de découvertes, de bonnes adresses et de musique au coin du feu. Le carnet partagé pour explorer Dublin.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button href="/visites" icon={ArrowRight}>Explorer le carnet</Button>
-              <Link to="/food" className="inline-flex min-h-11 items-center rounded-2xl border border-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/[0.07]">Bonnes adresses</Link>
+              <Button href="/explorer" icon={ArrowRight}>Explorer le carnet</Button>
             </div>
           </div>
           <div className="rounded-3xl border border-white/10 bg-ink/50 p-5 shadow-glow backdrop-blur-xl sm:p-6">
@@ -94,14 +105,22 @@ export default function Home() {
       <section>
         <SectionHeading eyebrow="Le point de chute" title="Bienvenue à Dublin" description={trip.hotel.description} />
         <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
-          <div className="group relative isolate flex min-h-[19rem] overflow-hidden rounded-3xl border border-white/10 bg-cover bg-center shadow-glow sm:min-h-[23rem]" style={{ backgroundImage: `url("${hotelImage}")` }}>
-            <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/5 via-black/10 to-black/80" aria-hidden="true" />
-            <div className="relative z-10 mt-auto w-full bg-black/50 p-5 backdrop-blur-md sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.17em] text-mint">{trip.datesLabel} · Hébergement partagé</p>
-              <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">{trip.hotel.name}</h3>
-              <p className="mt-2 text-sm text-slate-200">{trip.hotel.address}</p>
-              <p className="mt-2 text-xs leading-5 text-slate-300">Point de départ idéal, à proximité des principales adresses du centre-ville.</p>
-              <Button className="mt-4" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(trip.hotel.name)}`} icon={ArrowRight} variant="secondary" target="_blank" rel="noreferrer">Voir l’itinéraire</Button>
+          <div className="space-y-3">
+            <article className="overflow-hidden rounded-3xl border border-white/10 shadow-glow md:hidden">
+              <img src={hotelImage} alt="Chambre du Riu Plaza The Gresham Dublin" className="h-52 w-full object-cover sm:h-64" />
+              <HotelDetails className="p-5 sm:p-6" />
+            </article>
+            <article className="group relative hidden min-h-[23rem] isolate overflow-hidden rounded-3xl border border-white/10 bg-cover bg-center shadow-glow md:flex" style={{ backgroundImage: `url("${hotelImage}")` }}>
+              <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/5 via-black/10 to-black/55" aria-hidden="true" />
+              <HotelDetails className="gradient-blur relative z-10 mt-auto w-full p-5 backdrop-blur-md sm:p-6" />
+            </article>
+            <div className="grid grid-cols-2 gap-3">
+              <Link to="/checklist" className="group flex min-h-14 items-center justify-between gap-2 rounded-2xl border border-mint/20 bg-mint/[0.07] px-4 py-3 text-sm font-semibold text-mint transition hover:bg-mint/[0.12]">
+                <span className="flex items-center gap-2"><ClipboardCheck size={18} />Checklist</span><ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+              </Link>
+              <Link to="/documents" className="group flex min-h-14 items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.07]">
+                <span className="flex items-center gap-2"><FileLock2 size={18} />Billets</span><ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </div>
           </div>
           <WeatherWidget />

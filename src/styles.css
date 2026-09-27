@@ -31,6 +31,22 @@ button, a { -webkit-tap-highlight-color: transparent; }
     linear-gradient(135deg, #13211b 0%, #101916 55%, #101514 100%);
 }
 
+.gradient-blur {
+  isolation: isolate;
+}
+
+.gradient-blur::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 100%);
+  pointer-events: none;
+}
+
 .family-map {
   z-index: 0;
   height: 22rem;

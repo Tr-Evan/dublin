@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100" fill="none">
+  <defs>
+    <linearGradient id="table" x1="120" y1="0" x2="780" y2="1100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#654936"/>
+      <stop offset="1" stop-color="#241C17"/>
+    </linearGradient>
+    <radialGradient id="plate" cx="0" cy="0" r="1" gradientTransform="matrix(0 365 -365 0 450 550)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6EAD5"/>
+      <stop offset=".83" stop-color="#D8C8AF"/>
+      <stop offset=".85" stop-color="#8C7258"/>
+      <stop offset="1" stop-color="#44382E"/>
+    </radialGradient>
+  </defs>
+  <path fill="url(#table)" d="M0 0h900v1100H0z"/>
+  <path stroke="#C79C6B" stroke-opacity=".18" stroke-width="18" d="M-80 130 990 930M-100 330 710 1100M160-80 980 540"/>
+  <circle cx="450" cy="560" r="355" fill="url(#plate)"/>
+  <circle cx="450" cy="560" r="251" fill="#2D432F"/>
+  <path fill="#4E7047" d="M291 442c71-81 157-84 250-45 64 28 88 93 26 132-87 55-218 77-277 22-35-33-33-73 1-109Z"/>
+  <path fill="#C47A43" d="M328 518c58-55 174-64 241-14 52 39 39 104-17 132-64 32-171 21-217-22-31-29-34-67-7-96Z"/>
+  <path fill="#E6C98E" d="M376 503c23-20 61-23 84-7 18 13 14 34-6 45-22 12-62 8-78-8-11-10-11-21 0-30Zm83 84c21-18 57-20 77-5 16 12 12 31-6 41-21 11-57 7-72-7-10-9-10-20 1-29Z"/>
+  <circle cx="369" cy="618" r="20" fill="#BD4B35"/>
+  <circle cx="530" cy="459" r="17" fill="#BD4B35"/>
+  <path stroke="#F6EAD5" stroke-opacity=".85" stroke-width="11" stroke-linecap="round" d="M698 125v228m42-228v228m-42-98h42M153 265l142 155m-110-186 142 155"/>
+  <path fill="#79F2B2" fill-opacity=".65" d="M140 820c46-31 98-25 125 10-38 20-82 18-125-10Zm507 18c40-39 91-44 126-13-34 27-78 33-126 13Z"/>
+</svg>

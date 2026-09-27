@@ -11,6 +11,7 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Checklist = lazy(() => import("./pages/Checklist"));
 const Family = lazy(() => import("./pages/Family"));
 const Home = lazy(() => import("./pages/Home"));
+const Explore = lazy(() => import("./pages/Explore"));
 const Visites = lazy(() => import("./pages/Visites"));
 const Food = lazy(() => import("./pages/Food"));
 const Pubs = lazy(() => import("./pages/Pubs"));
@@ -39,6 +40,7 @@ function AppContent() {
             <Suspense fallback={<RouteLoader />}>
               <Routes location={location}>
                 <Route path="/" element={<Home />} />
+                <Route path="/explorer" element={<Explore />} />
                 <Route path="/visites" element={<Visites />} />
                 <Route path="/food" element={<Food />} />
                 <Route path="/pubs" element={<Pubs />} />
