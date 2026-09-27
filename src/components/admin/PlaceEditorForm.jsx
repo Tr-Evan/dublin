@@ -9,8 +9,12 @@ const blankPlace = {
   address: "",
   openingHours: "",
   price: "",
+  priceRange: "",
   distance: "",
   mapQuery: "",
+  officialWebsite: "",
+  bookingLink: "",
+  transportDetails: { mode: "", duration: "", route: "" },
   note: "",
   accent: "mint",
   details: [],
@@ -26,13 +30,27 @@ export default function PlaceEditorForm({ place, kind, onSave, onCancel }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setValues(place ? { ...blankPlace, ...place } : blankPlace);
+    setValues(place ? {
+      ...blankPlace,
+      ...place,
+      transportDetails: {
+        ...blankPlace.transportDetails,
+        ...(place.transportDetails ?? {}),
+      },
+    } : blankPlace);
     setImages([]);
     setError("");
   }, [place, kind]);
 
   function update(field, value) {
     setValues((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateTransport(field, value) {
+    setValues((current) => ({
+      ...current,
+      transportDetails: { ...current.transportDetails, [field]: value },
+    }));
   }
 
   function selectImages(fileList) {
@@ -70,17 +88,45 @@ export default function PlaceEditorForm({ place, kind, onSave, onCancel }) {
         <h3 className="text-lg font-semibold text-white">{place ? "Modifier l'adresse" : "Ajouter une adresse"}</h3>
         {place && <Button type="button" variant="secondary" icon={X} onClick={onCancel} aria-label="Annuler la modification" className="min-h-10 px-3" />}
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="text-xs font-medium text-slate-300">Nom du lieu<input className={inputClass} maxLength={120} required value={values.name} onChange={(event) => update("name", event.target.value)} placeholder="Ex. Trinity College" /></label>
-        <label className="text-xs font-medium text-slate-300">Catégorie<input className={inputClass} required value={values.category} onChange={(event) => update("category", event.target.value)} placeholder="Ex. Histoire & culture" /></label>
-        <label className="text-xs font-medium text-slate-300 sm:col-span-2">Description<textarea className={`${inputClass} min-h-24 py-3`} maxLength={1200} value={values.description} onChange={(event) => update("description", event.target.value)} placeholder="Qu'est-ce qui rend cette adresse spéciale ?" /></label>
-        <label className="text-xs font-medium text-slate-300 sm:col-span-2">Adresse<input className={inputClass} value={values.address} onChange={(event) => update("address", event.target.value)} placeholder="Adresse à Dublin" /></label>
-        <label className="text-xs font-medium text-slate-300">Horaires d'ouverture<input className={inputClass} value={values.openingHours} onChange={(event) => update("openingHours", event.target.value)} placeholder="Ex. 9 h — 17 h" /></label>
-        <label className="text-xs font-medium text-slate-300">Prix<input className={inputClass} value={values.price} onChange={(event) => update("price", event.target.value)} placeholder="Ex. ≈ 19 € / personne" /></label>
-        <label className="text-xs font-medium text-slate-300">Temps de trajet<input className={inputClass} value={values.distance} onChange={(event) => update("distance", event.target.value)} placeholder="Ex. 12 min · 850 m" /></label>
-        <label className="text-xs font-medium text-slate-300">Recherche Google Maps<input className={inputClass} value={values.mapQuery} onChange={(event) => update("mapQuery", event.target.value)} placeholder={values.name || "Nom du lieu"} /></label>
-        <label className="text-xs font-medium text-slate-300 sm:col-span-2">À savoir<textarea className={`${inputClass} min-h-20 py-3`} maxLength={500} value={values.note} onChange={(event) => update("note", event.target.value)} placeholder="Conseil ou information utile" /></label>
-      </div>
+      <fieldset className="rounded-2xl border border-white/[0.07] p-4 sm:p-5">
+        <legend className="px-2 text-sm font-semibold text-white">Informations générales</legend>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="text-xs font-medium text-slate-300">Nom du lieu<input className={inputClass} maxLength={120} required value={values.name} onChange={(event) => update("name", event.target.value)} placeholder="Ex. Trinity College" /></label>
+          <label className="text-xs font-medium text-slate-300">Catégorie<input className={inputClass} required value={values.category} onChange={(event) => update("category", event.target.value)} placeholder="Ex. Histoire & culture" /></label>
+          <label className="text-xs font-medium text-slate-300 sm:col-span-2">Description<textarea className={`${inputClass} min-h-24 py-3`} maxLength={1200} value={values.description} onChange={(event) => update("description", event.target.value)} placeholder="Qu'est-ce qui rend cette adresse spéciale ?" /></label>
+          <label className="text-xs font-medium text-slate-300 sm:col-span-2">Adresse<input className={inputClass} value={values.address} onChange={(event) => update("address", event.target.value)} placeholder="Adresse à Dublin" /></label>
+          <label className="text-xs font-medium text-slate-300">Horaires d'ouverture<input className={inputClass} value={values.openingHours} onChange={(event) => update("openingHours", event.target.value)} placeholder="Ex. 9 h — 17 h" /></label>
+          <label className="text-xs font-medium text-slate-300">Prix indicatif<input className={inputClass} value={values.price} onChange={(event) => update("price", event.target.value)} placeholder="Ex. ≈ 19 € / personne" /></label>
+          <label className="text-xs font-medium text-slate-300 sm:col-span-2">Fourchette de prix<input className={inputClass} value={values.priceRange} onChange={(event) => update("priceRange", event.target.value)} placeholder="Ex. Entrée 8 € · menu 19 — 26 €" /></label>
+          <label className="text-xs font-medium text-slate-300">Temps / distance totale<input className={inputClass} value={values.distance} onChange={(event) => update("distance", event.target.value)} placeholder="Ex. 12 min · 850 m" /></label>
+          <label className="text-xs font-medium text-slate-300">Recherche Google Maps<input className={inputClass} value={values.mapQuery} onChange={(event) => update("mapQuery", event.target.value)} placeholder={values.name || "Nom du lieu"} /></label>
+          <label className="text-xs font-medium text-slate-300 sm:col-span-2">À savoir<textarea className={`${inputClass} min-h-20 py-3`} maxLength={500} value={values.note} onChange={(event) => update("note", event.target.value)} placeholder="Conseil ou information utile" /></label>
+        </div>
+      </fieldset>
+      <fieldset className="rounded-2xl border border-white/[0.07] p-4 sm:p-5">
+        <legend className="px-2 text-sm font-semibold text-white">Transport</legend>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="text-xs font-medium text-slate-300">Mode
+            <select className={inputClass} value={values.transportDetails.mode} onChange={(event) => updateTransport("mode", event.target.value)}>
+              <option value="">Non précisé</option>
+              <option value="marche">À pied</option>
+              <option value="bus">Bus</option>
+              <option value="luas">Luas</option>
+              <option value="taxi">Taxi</option>
+              <option value="autre">Autre</option>
+            </select>
+          </label>
+          <label className="text-xs font-medium text-slate-300">Durée (minutes)<input className={inputClass} type="number" min="0" max="1440" value={values.transportDetails.duration} onChange={(event) => updateTransport("duration", event.target.value === "" ? "" : Number(event.target.value))} placeholder="Ex. 13" /></label>
+          <label className="text-xs font-medium text-slate-300 sm:col-span-2">Itinéraire<textarea className={`${inputClass} min-h-20 py-3`} maxLength={1000} value={values.transportDetails.route} onChange={(event) => updateTransport("route", event.target.value)} placeholder="Ex. À pied via O'Connell Bridge jusqu'à College Green" /></label>
+        </div>
+      </fieldset>
+      <fieldset className="rounded-2xl border border-white/[0.07] p-4 sm:p-5">
+        <legend className="px-2 text-sm font-semibold text-white">Liens utiles</legend>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="text-xs font-medium text-slate-300">Site officiel<input className={inputClass} type="url" maxLength={500} value={values.officialWebsite} onChange={(event) => update("officialWebsite", event.target.value)} placeholder="https://exemple.ie" /></label>
+          <label className="text-xs font-medium text-slate-300">Lien de réservation<input className={inputClass} type="url" maxLength={500} value={values.bookingLink} onChange={(event) => update("bookingLink", event.target.value)} placeholder="https://exemple.ie/book" /></label>
+        </div>
+      </fieldset>
       <label
         className={`flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-4 text-center text-sm transition ${dragging ? "border-mint bg-mint/[0.08] text-mint" : "border-white/15 bg-white/[0.02] text-slate-300 hover:border-mint/40"}`}
         onDragOver={(event) => { event.preventDefault(); setDragging(true); }}

@@ -4,6 +4,19 @@ import { supabase } from "./supabaseClient";
 const legacyPlaces = { visite: visits, food: restaurants, pub: pubs };
 const cacheKey = (kind) => `dublin-v2:places:${kind}`;
 
+function parseTransportDetails(value) {
+  if (!value) return null;
+  if (typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value !== "string") return null;
+
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function fromRow(row) {
   const imagePaths = row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : [];
   const imageUrls = imagePaths.map((path) => supabase.storage.from("place-covers").getPublicUrl(path).data.publicUrl);
@@ -16,6 +29,10 @@ function fromRow(row) {
     address: row.address,
     openingHours: row.opening_hours,
     price: row.price,
+    officialWebsite: row.official_website ?? "",
+    bookingLink: row.booking_link ?? "",
+    priceRange: row.price_range ?? "",
+    transportDetails: parseTransportDetails(row.transport_details),
     distance: row.travel_time,
     travel: row.travel_time,
     mapQuery: row.map_query || row.name,
@@ -30,6 +47,13 @@ function fromRow(row) {
 }
 
 function toRow(place, kind) {
+  const transportDetails = place.transportDetails;
+  const hasTransportDetails = transportDetails && (
+    transportDetails.mode
+    || (transportDetails.duration != null && transportDetails.duration !== "")
+    || transportDetails.route
+  );
+
   return {
     id: place.id,
     kind,
@@ -39,6 +63,10 @@ function toRow(place, kind) {
     address: place.address ?? "",
     opening_hours: place.openingHours ?? "",
     price: place.price ?? "",
+    official_website: place.officialWebsite || null,
+    booking_link: place.bookingLink || null,
+    price_range: place.priceRange || null,
+    transport_details: hasTransportDetails ? transportDetails : null,
     travel_time: place.distance ?? place.travel ?? "",
     map_query: place.mapQuery ?? place.name,
     image_path: place.imagePaths?.[0] ?? place.imagePath ?? null,

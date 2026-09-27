@@ -24,7 +24,7 @@ const placeKinds = [
 ];
 const dates = ["2026-10-20", "2026-10-21", "2026-10-22", "2026-10-23"];
 const adminTabs = [
-  { key: "places", label: "Lieux & Programme", icon: Images },
+  { key: "places", label: "Lieux & sorties", icon: Images },
   { key: "family", label: "Journal Famille", icon: Newspaper },
   { key: "vault", label: "Coffre-fort", icon: FileLock2 },
   { key: "checklist", label: "Checklist", icon: ListChecks },

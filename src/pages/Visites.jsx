@@ -4,7 +4,7 @@ import { trip } from "../data/itineraryData";
 import PlaceCard from "../components/ui/PlaceCard";
 import SectionHeading from "../components/ui/SectionHeading";
 import Badge from "../components/ui/Badge";
-import BackToProgramme from "../components/ui/BackToProgramme";
+import BackToExplore from "../components/ui/BackToExplore";
 import usePlaces from "../hooks/usePlaces";
 
 const transportIcons = [Footprints, CreditCard, Bus, TramFront];
@@ -13,7 +13,7 @@ export default function Visites() {
   const { places, loading, error } = usePlaces("visite");
   return (
     <div className="space-y-8">
-      <BackToProgramme />
+      <BackToExplore />
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <Badge tone="mint">Culture · histoire · découverte</Badge>
         <SectionHeading eyebrow="Carnet partagé" title="Les incontournables" description="De la Long Room à la Guinness, les visites du séjour et leurs infos pratiques." />

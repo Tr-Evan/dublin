@@ -3,12 +3,12 @@ import { Compass, FileLock2, Home, Users } from "lucide-react";
 
 const navigationItems = [
   { to: "/", label: "Accueil", icon: Home, end: true },
-  { to: "/programme", label: "Programme", icon: Compass },
+  { to: "/explorer", label: "Explorer", icon: Compass },
   { to: "/documents", label: "Coffre-fort", icon: FileLock2 },
   { to: "/family", label: "Famille", icon: Users },
 ];
 
-const programmePaths = ["/programme", "/explorer", "/visites", "/food", "/pubs"];
+const explorePaths = ["/explorer", "/programme", "/visites", "/food", "/pubs"];
 
 export default function BottomNavigation() {
   const { pathname } = useLocation();
@@ -17,9 +17,9 @@ export default function BottomNavigation() {
     <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 z-50 border-t border-white/[0.07] bg-ink/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-2xl md:inset-y-0 md:right-auto md:w-64 md:border-r md:border-t-0 md:px-4 md:py-6">
       <div className="mx-auto flex max-w-md items-stretch justify-around md:max-w-none md:flex-col md:justify-start md:gap-1">
         {navigationItems.map(({ to, label, icon: Icon, end }) => {
-          const isProgrammeItem = to === "/programme" && programmePaths.includes(pathname);
+          const isExploreItem = to === "/explorer" && explorePaths.includes(pathname);
           const isOtherItem = to !== "/" && pathname.startsWith(to);
-          const active = to === "/" ? pathname === "/" : isProgrammeItem || isOtherItem;
+          const active = to === "/" ? pathname === "/" : isExploreItem || isOtherItem;
           return (
             <NavLink
               key={to}

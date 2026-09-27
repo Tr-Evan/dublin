@@ -3,14 +3,14 @@ import { Utensils } from "lucide-react";
 import PlaceCard from "../components/ui/PlaceCard";
 import SectionHeading from "../components/ui/SectionHeading";
 import Badge from "../components/ui/Badge";
-import BackToProgramme from "../components/ui/BackToProgramme";
+import BackToExplore from "../components/ui/BackToExplore";
 import usePlaces from "../hooks/usePlaces";
 
 export default function Food() {
   const { places, loading, error } = usePlaces("food");
   return (
     <div className="space-y-8">
-      <BackToProgramme />
+      <BackToExplore />
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <Badge tone="amber" icon={Utensils}>Bonnes adresses & menus</Badge>
         <SectionHeading eyebrow="À table" title="Dublin se savoure" description="Boxty réconfortant, dîner au bord de la Liffey et brunch plein de soleil : les adresses du carnet." />

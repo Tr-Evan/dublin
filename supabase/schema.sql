@@ -45,6 +45,10 @@ create table if not exists public.places (
   address text not null default '',
   opening_hours text not null default '',
   price text not null default '',
+  official_website text,
+  booking_link text,
+  price_range text,
+  transport_details jsonb,
   travel_time text not null default '',
   map_query text not null default '',
   image_path text,
@@ -53,6 +57,12 @@ create table if not exists public.places (
   accent text not null default 'mint' check (accent in ('mint', 'amber', 'rose')),
   updated_at timestamptz not null default now()
 );
+
+alter table public.places
+  add column if not exists official_website text,
+  add column if not exists booking_link text,
+  add column if not exists price_range text,
+  add column if not exists transport_details jsonb;
 
 create table if not exists public.day_schedule (
   id uuid primary key default gen_random_uuid(),

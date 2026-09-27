@@ -61,12 +61,12 @@ export default function Explore() {
         <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-mint/[0.09] blur-3xl" />
         <div className="relative">
           <Badge tone="mint" icon={Coffee}>Le carnet de Dublin</Badge>
-          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">Le programme de Dublin</h1>
+          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">Explorer Dublin</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Toutes les idées de sorties, de bonnes tables et de pubs réunies au même endroit.</p>
         </div>
       </section>
       <section aria-label="Explorer par catégorie">
-        <SectionHeading eyebrow="À la découverte de Dublin" title="Choisir une escale" description="Visites, tables et pubs : le programme partagé d’Evan & Enola." />
+        <SectionHeading eyebrow="À la découverte de Dublin" title="Choisir une escale" description="Visites, tables et pubs : les idées partagées d’Evan & Enola." />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {categories.map((category, index) => <CategoryCard key={category.to} category={category} index={index} />)}
         </div>
