@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bus, Clock3, ExternalLink, Footprints, MapPin, Navigation, TramFront, ChevronDown } from "lucide-react";
+import { ArrowUpRight, Bus, Clock3, ExternalLink, Footprints, MapPin, Navigation, TramFront, ChevronDown } from "lucide-react";
 import Badge from "./Badge";
 import Button from "./Button";
 import ImageGallery from "./ImageGallery";
