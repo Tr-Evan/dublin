@@ -1,6 +1,6 @@
 import { supabase } from "./supabaseClient";
 
-const expenseFields = "id, title, amount, paid_by, expense_date, is_shared, created_at, created_by";
+const expenseFields = "id, title, amount, paid_by, expense_date, is_shared, is_reimbursement, created_at, created_by";
 
 export async function getExpenses() {
   if (!supabase) throw new Error("Configurez Supabase pour consulter le budget partagé.");
@@ -12,7 +12,7 @@ export async function getExpenses() {
   return data ?? [];
 }
 
-export async function addExpense({ title, amount, paidBy, expenseDate, isShared }) {
+export async function addExpense({ title, amount, paidBy, expenseDate, isShared, isReimbursement = false }) {
   if (!supabase) throw new Error("Configurez Supabase pour enregistrer une dépense.");
   const cleanedTitle = title.trim();
   const parsedAmount = Number(amount);
@@ -24,6 +24,8 @@ export async function addExpense({ title, amount, paidBy, expenseDate, isShared 
     throw new Error("Choisissez une date de dépense valide.");
   }
   if (typeof isShared !== "boolean") throw new Error("Précisez si la dépense doit être divisée.");
+  if (typeof isReimbursement !== "boolean") throw new Error("Précisez si la transaction est un remboursement.");
+  if (isReimbursement && isShared) throw new Error("Un remboursement ne peut pas être une dépense à diviser.");
 
   const { data, error } = await supabase
     .from("expenses")
@@ -33,6 +35,7 @@ export async function addExpense({ title, amount, paidBy, expenseDate, isShared 
       paid_by: paidBy,
       expense_date: expenseDate,
       is_shared: isShared,
+      is_reimbursement: isReimbursement,
     })
     .select(expenseFields)
     .single();

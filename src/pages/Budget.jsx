@@ -18,13 +18,28 @@ function getToday() {
 }
 
 function getSettlement(expenses) {
-  const paid = expenses.filter((expense) => expense.is_shared).reduce((totals, expense) => {
+  const paid = expenses.filter((expense) => expense.is_shared && !expense.is_reimbursement).reduce((totals, expense) => {
     totals[expense.paid_by] += Number(expense.amount);
     return totals;
   }, { Evan: 0, Enola: 0 });
-  const amount = Math.round(Math.abs(paid.Evan - paid.Enola) / 2 * 100) / 100;
+  const totalShared = paid.Evan + paid.Enola;
+  const balances = {
+    Evan: paid.Evan - totalShared / 2,
+    Enola: paid.Enola - totalShared / 2,
+  };
+  expenses.filter((expense) => expense.is_reimbursement).forEach((expense) => {
+    const payer = expense.paid_by;
+    const receiver = people.find((person) => person !== payer);
+    if (!receiver) return;
+    const amount = Number(expense.amount);
+    balances[payer] += amount;
+    balances[receiver] -= amount;
+  });
+
+  const evanBalance = Math.round(balances.Evan * 100) / 100;
+  const amount = Math.abs(evanBalance);
   if (amount < 0.01) return { amount: 0, message: "Les comptes sont équilibrés.", debtor: null, creditor: null };
-  return paid.Evan > paid.Enola
+  return evanBalance > 0
     ? { amount, message: "Enola doit à Evan", debtor: "Enola", creditor: "Evan" }
     : { amount, message: "Evan doit à Enola", debtor: "Evan", creditor: "Enola" };
 }
@@ -63,6 +78,7 @@ export default function Budget() {
 
   const settlement = useMemo(() => getSettlement(expenses), [expenses]);
   const stats = useMemo(() => expenses.reduce((totals, expense) => {
+    if (expense.is_reimbursement) return totals;
     const value = Number(expense.amount);
     totals.total += value;
     if (!expense.is_shared) totals.personal[expense.paid_by] += value;
@@ -94,10 +110,11 @@ export default function Budget() {
     try {
       await addExpense({
         title: "Remboursement",
-        amount: (Math.round(settlement.amount * 100) / 100) * 2,
+        amount: Math.round(settlement.amount * 100) / 100,
         paidBy: settlement.debtor,
         expenseDate: getToday(),
-        isShared: true,
+        isShared: false,
+        isReimbursement: true,
       });
       await refresh();
     } catch (settlementError) {
@@ -203,12 +220,12 @@ export default function Budget() {
           : expenses.length ? (
             <ul className="space-y-3">
               {expenses.map((expense) => (
-                <li key={expense.id} className={`glass-card flex items-center gap-3 rounded-2xl p-4 ${expense.title === "Remboursement" ? "border border-emerald-300/20 bg-emerald-300/[0.04]" : ""}`}>
-                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${expense.title === "Remboursement" ? "bg-emerald-300/10 text-emerald-300" : "bg-mint/[0.08] text-mint"}`}>
-                    {expense.title === "Remboursement" ? <ArrowLeftRight size={18} /> : <ReceiptEuro size={18} />}
+                <li key={expense.id} className={`glass-card flex items-center gap-3 rounded-2xl p-4 ${expense.is_reimbursement ? "border border-emerald-300/20 bg-emerald-300/[0.04]" : ""}`}>
+                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${expense.is_reimbursement ? "bg-emerald-300/10 text-emerald-300" : "bg-mint/[0.08] text-mint"}`}>
+                    {expense.is_reimbursement ? <ArrowLeftRight size={18} /> : <ReceiptEuro size={18} />}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className={`truncate font-medium ${expense.title === "Remboursement" ? "text-emerald-300" : "text-white"}`}>{expense.title}</p>
+                    <p className={`truncate font-medium ${expense.is_reimbursement ? "text-emerald-300" : "text-white"}`}>{expense.title}</p>
                     <p className="mt-1 text-xs text-muted">{expense.paid_by} a payé · {new Date(`${expense.expense_date}T00:00:00`).toLocaleDateString("fr-FR")} · {expense.is_shared ? "à diviser" : "perso"}</p>
                   </div>
                   <p className="shrink-0 text-sm font-semibold text-white">{euros.format(Number(expense.amount))}</p>

@@ -129,6 +129,7 @@ create table if not exists public.expenses (
   paid_by text not null check (paid_by in ('Evan', 'Enola')),
   expense_date date not null default current_date,
   is_shared boolean not null default true,
+  is_reimbursement boolean not null default false,
   created_at timestamptz not null default now(),
   created_by uuid not null default auth.uid() references auth.users (id)
 );
