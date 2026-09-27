@@ -38,6 +38,7 @@ export default function Budget() {
   const [isShared, setIsShared] = useState(true);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [settling, setSettling] = useState(false);
   const [error, setError] = useState("");
 
   const refresh = useCallback(async () => {
@@ -86,6 +87,26 @@ export default function Budget() {
     }
   }
 
+  async function settleUp() {
+    if (!settlement.amount || !settlement.debtor || settling) return;
+    setSettling(true);
+    setError("");
+    try {
+      await addExpense({
+        title: "Remboursement",
+        amount: (Math.round(settlement.amount * 100) / 100) * 2,
+        paidBy: settlement.debtor,
+        expenseDate: getToday(),
+        isShared: true,
+      });
+      await refresh();
+    } catch (settlementError) {
+      setError(`Impossible d'enregistrer le remboursement. ${settlementError.message}`);
+    } finally {
+      setSettling(false);
+    }
+  }
+
   async function removeExpense(expense) {
     if (!window.confirm(`Supprimer la dépense « ${expense.title} » ?`)) return;
     setError("");
@@ -124,6 +145,17 @@ export default function Budget() {
             </p>
           ) : <p className="mt-3 text-xl font-semibold text-emerald-300">{settlement.message}</p>}
           <p className="mt-2 text-xs text-slate-400">Calculée uniquement sur les dépenses à diviser</p>
+          {settlement.amount > 0 && (
+            <Button
+              type="button"
+              icon={settling ? LoaderCircle : ArrowLeftRight}
+              disabled={settling}
+              onClick={() => void settleUp()}
+              className="mt-4 w-full"
+            >
+              {settling ? "Enregistrement…" : "Rembourser la dette"}
+            </Button>
+          )}
         </motion.article>
 
         <motion.article initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-3xl border border-white/10 p-5 sm:p-6">
@@ -139,19 +171,28 @@ export default function Budget() {
 
       <section className="glass-card rounded-3xl p-5 sm:p-6">
         <SectionHeading eyebrow="Ajouter une dépense" title="Qui a réglé quoi ?" />
-        <form onSubmit={(event) => void submit(event)} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_9rem_9rem_10rem_auto] lg:items-end">
+        <form onSubmit={(event) => void submit(event)} className="grid gap-4 md:grid-cols-3 md:items-end">
           <label className="text-xs font-medium text-slate-300">Quoi ?<input required maxLength={160} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex. Dîner du premier soir" className={inputClass} /></label>
           <label className="text-xs font-medium text-slate-300">Combien ?<input required type="number" min="0.01" max="99999999.99" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0,00 €" className={inputClass} /></label>
-          <label className="text-xs font-medium text-slate-300">Payé par<select value={paidBy} onChange={(event) => setPaidBy(event.target.value)} className={inputClass}>{people.map((person) => <option key={person}>{person}</option>)}</select></label>
           <label className="text-xs font-medium text-slate-300">Date<input required type="date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} className={inputClass} /></label>
-          <div className="flex items-center sm:col-span-2 lg:col-span-5">
-            <label htmlFor="expense-shared" className="flex cursor-pointer items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <input id="expense-shared" type="checkbox" checked={isShared} onChange={(event) => setIsShared(event.target.checked)} className="h-5 w-5 accent-emerald-400" />
-              <span className="text-sm font-semibold text-white">Diviser cette dépense</span>
+          <div className="grid gap-4 md:col-span-3 md:grid-cols-3 md:items-end">
+            <label className="text-xs font-medium text-slate-300">Payé par<select value={paidBy} onChange={(event) => setPaidBy(event.target.value)} className={inputClass}>{people.map((person) => <option key={person}>{person}</option>)}</select></label>
+            <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-ink/80 px-4 text-sm font-medium text-slate-200 md:mb-0">
+              <span>Partager la dépense</span>
+              <span className="relative inline-flex">
+                <input
+                  type="checkbox"
+                  checked={isShared}
+                  onChange={(event) => setIsShared(event.target.checked)}
+                  className="peer sr-only"
+                  aria-label="Partager la dépense"
+                />
+                <span aria-hidden="true" className="h-6 w-11 rounded-full bg-slate-600 transition-colors peer-checked:bg-green-500 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-mint" />
+                <span aria-hidden="true" className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+              </span>
             </label>
-            <p className="ml-3 text-xs leading-5 text-slate-400">Décochez si c'est une dépense perso ou déjà réglée (s'ajoutera au total du voyage, mais pas à la balance de remboursement).</p>
+            <Button type="submit" icon={busy ? LoaderCircle : Plus} disabled={busy}>{busy ? "Ajout…" : "Ajouter"}</Button>
           </div>
-          <Button type="submit" icon={busy ? LoaderCircle : Plus} disabled={busy}>{busy ? "Ajout…" : "Ajouter"}</Button>
         </form>
         {error && <p role="alert" className="mt-4 rounded-xl border border-rose-400/20 bg-rose-400/[0.06] p-3 text-sm text-rose-200">{error}</p>}
       </section>
@@ -162,10 +203,12 @@ export default function Budget() {
           : expenses.length ? (
             <ul className="space-y-3">
               {expenses.map((expense) => (
-                <li key={expense.id} className="glass-card flex items-center gap-3 rounded-2xl p-4">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-mint/[0.08] text-mint"><ReceiptEuro size={18} /></span>
+                <li key={expense.id} className={`glass-card flex items-center gap-3 rounded-2xl p-4 ${expense.title === "Remboursement" ? "border border-emerald-300/20 bg-emerald-300/[0.04]" : ""}`}>
+                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${expense.title === "Remboursement" ? "bg-emerald-300/10 text-emerald-300" : "bg-mint/[0.08] text-mint"}`}>
+                    {expense.title === "Remboursement" ? <ArrowLeftRight size={18} /> : <ReceiptEuro size={18} />}
+                  </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-white">{expense.title}</p>
+                    <p className={`truncate font-medium ${expense.title === "Remboursement" ? "text-emerald-300" : "text-white"}`}>{expense.title}</p>
                     <p className="mt-1 text-xs text-muted">{expense.paid_by} a payé · {new Date(`${expense.expense_date}T00:00:00`).toLocaleDateString("fr-FR")} · {expense.is_shared ? "à diviser" : "perso"}</p>
                   </div>
                   <p className="shrink-0 text-sm font-semibold text-white">{euros.format(Number(expense.amount))}</p>
