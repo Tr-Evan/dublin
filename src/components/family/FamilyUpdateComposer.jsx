@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { CalendarDays, ImagePlus, LoaderCircle, Send, X } from "lucide-react";
 import { publishFamilyUpdate } from "../../services/timelineService";
 import Button from "../ui/Button";
@@ -45,14 +46,23 @@ export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
     setPhotos(selected);
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="family-update-title" onClick={() => { if (!busy) onClose(); }}>
-      <section className="glass-card modal-scroll flex max-h-[100dvh] w-full max-w-xl flex-col overflow-y-auto rounded-t-3xl p-5 sm:max-h-[90dvh] sm:rounded-3xl sm:p-7" onClick={(event) => event.stopPropagation()}>
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto overscroll-y-contain bg-black/75 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[calc(7rem+env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:p-5"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="family-update-title"
+      onClick={() => { if (!busy) onClose(); }}
+    >
+      <section
+        className="glass-card my-0 h-auto w-full max-w-xl shrink-0 rounded-3xl p-5 sm:my-auto sm:max-h-[90dvh] sm:overflow-y-auto sm:p-7"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="mb-5 flex items-start justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-mint">Un petit mot de Dublin</p><h2 id="family-update-title" className="mt-2 text-xl font-semibold text-white">Partager un souvenir</h2><p className="mt-1 text-sm text-muted">En direct sur la timeline de la famille.</p></div>
           <Button type="button" variant="secondary" icon={X} disabled={busy} onClick={onClose} aria-label="Fermer le formulaire" className="min-h-10 px-3" />
         </div>
-        <form onSubmit={(event) => void submit(event)} className="space-y-4">
+        <form onSubmit={(event) => void submit(event)} className="space-y-4 pb-24 sm:pb-2">
           <div className="grid grid-cols-2 gap-3">
             <label className="text-xs font-medium text-slate-300">Jour<select required value={date} onChange={(event) => setDate(event.target.value)} className={inputClass}>{tripDates.map((day) => <option key={day} value={day}>{new Date(`${day}T12:00:00`).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long" })}</option>)}</select></label>
             <label className="text-xs font-medium text-slate-300">Heure à Dublin<input type="time" required value={time} onChange={(event) => setTime(event.target.value)} className={inputClass} /></label>
@@ -78,6 +88,7 @@ export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
           </div>
         </form>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

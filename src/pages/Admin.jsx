@@ -234,7 +234,7 @@ function AdminWorkspace({ auth }) {
         </div>
       </section>
       </div>}
-      {activeTab === "family" && <section id="admin-panel-family" role="tabpanel" aria-labelledby="admin-tab-family" className="glass-card rounded-3xl p-5 sm:p-6"><AdminTimeline /></section>}
+      {activeTab === "family" && <div id="admin-panel-family" role="tabpanel" aria-labelledby="admin-tab-family" className="pb-24"><AdminTimeline /></div>}
       {activeTab === "vault" && <section id="admin-panel-vault" role="tabpanel" aria-labelledby="admin-tab-vault" className="glass-card rounded-3xl p-5 sm:p-6"><DocumentVault /></section>}
       {activeTab === "checklist" && <section id="admin-panel-checklist" role="tabpanel" aria-labelledby="admin-tab-checklist" className="glass-card rounded-3xl p-5 sm:p-6"><Checklist /></section>}
     </div>
