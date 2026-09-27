@@ -14,7 +14,7 @@ import Checklist from "./Checklist";
 import usePlaces from "../hooks/usePlaces";
 import useSchedule from "../hooks/useSchedule";
 import { setActivityDate, setActivityVisited } from "../services/familyService";
-import { deletePlace, deletePlaceImages, savePlace, seedInitialPlaces, uploadPlaceImages } from "../services/placeService";
+import { deletePlace, deletePlaceImages, savePlace, seedInitialPlaces, syncItineraryMetadata, uploadPlaceImages } from "../services/placeService";
 import { hasSupabaseConfig, supabase } from "../services/supabaseClient";
 
 const placeKinds = [
@@ -142,6 +142,21 @@ function AdminWorkspace({ auth }) {
     }
   }
 
+  async function synchronizeItineraryMetadata() {
+    setBusy("sync-itinerary");
+    setError("");
+    setNotice("");
+    try {
+      const count = await syncItineraryMetadata();
+      await Promise.all([visits.refresh(), food.refresh(), pubs.refresh()]);
+      setNotice(`Les nouvelles informations de ${count} lieux ont été synchronisées sans remplacer les photos ni les autres champs modifiés dans l'administration.`);
+    } catch (syncError) {
+      setError(`Synchronisation impossible : ${syncError.message}`);
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function updateDate(placeId, visitDate) {
     setBusy(placeId);
     setError("");
@@ -195,7 +210,7 @@ function AdminWorkspace({ auth }) {
       {activeTab === "places" && <div id="admin-panel-places" role="tabpanel" aria-labelledby="admin-tab-places" className="space-y-8">
       <LocationSharingControl />
       <section className="glass-card rounded-3xl p-5 sm:p-6">
-        <SectionHeading eyebrow="Carnet partagé" title="Adresses du voyage" description="Les modifications sont enregistrées dans Supabase et partagées avec la famille en temps réel." action={<Button icon={Plus} onClick={() => { setAdding(true); setEditing(null); }}>Ajouter</Button>} />
+        <SectionHeading eyebrow="Carnet partagé" title="Adresses du voyage" description="Les modifications sont enregistrées dans Supabase et partagées avec la famille en temps réel." action={<div className="flex flex-wrap gap-2"><Button variant="secondary" icon={busy === "sync-itinerary" ? LoaderCircle : CloudUpload} disabled={Boolean(busy)} onClick={() => void synchronizeItineraryMetadata()}>{busy === "sync-itinerary" ? "Synchronisation…" : "Synchroniser les nouvelles données"}</Button><Button icon={Plus} disabled={Boolean(busy)} onClick={() => { setAdding(true); setEditing(null); }}>Ajouter</Button></div>} />
         <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Catégorie d'adresses">
           {placeKinds.map((item) => <button key={item.key} type="button" role="tab" aria-selected={kind === item.key} onClick={() => { setKind(item.key); setEditing(null); setAdding(false); }} className={`rounded-full border px-4 py-2 text-sm font-medium transition ${kind === item.key ? "border-mint/30 bg-mint/[0.1] text-mint" : "border-white/10 bg-white/[0.025] text-slate-400 hover:text-white"}`}>{item.label}<span className="ml-2 text-xs opacity-70">{dataByKind[item.key].places.length}</span></button>)}
         </div>

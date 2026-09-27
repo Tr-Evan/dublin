@@ -181,14 +181,44 @@ export async function deletePlaceImages(paths) {
 
 export async function seedInitialPlaces() {
   if (!supabase) throw new Error("Configurez Supabase avant d'initialiser les adresses.");
-  const rows = [
-    ...visits.map((place) => toRow(place, "visite")),
-    ...restaurants.map((place) => toRow(place, "food")),
-    ...pubs.map((place) => toRow(place, "pub")),
-  ];
+  const rows = getStaticPlaceRows();
   const { error } = await supabase.from("places").upsert(rows, {
     onConflict: "id",
     ignoreDuplicates: true,
   });
   if (error) throw new Error(error.message);
+}
+
+function getStaticPlaceRows() {
+  return [
+    ...visits.map((place) => toRow(place, "visite")),
+    ...restaurants.map((place) => toRow(place, "food")),
+    ...pubs.map((place) => toRow(place, "pub")),
+  ];
+}
+
+export async function syncItineraryMetadata() {
+  if (!supabase) throw new Error("Configurez Supabase avant de synchroniser les adresses.");
+
+  await seedInitialPlaces();
+  const rows = getStaticPlaceRows();
+
+  for (const row of rows) {
+    const { data, error } = await supabase
+      .from("places")
+      .update({
+        official_website: row.official_website,
+        booking_link: row.booking_link,
+        price_range: row.price_range,
+        transport_details: row.transport_details,
+      })
+      .eq("id", row.id)
+      .select("id")
+      .maybeSingle();
+
+    if (error) throw new Error(`Synchronisation de « ${row.name} » impossible : ${error.message}`);
+    if (!data) throw new Error(`Le lieu « ${row.name} » n'a pas été trouvé après son initialisation.`);
+  }
+
+  return rows.length;
 }
