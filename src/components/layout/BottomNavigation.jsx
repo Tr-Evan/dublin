@@ -4,7 +4,7 @@ import { Compass, FileLock2, Home, Users } from "lucide-react";
 const navigationItems = [
   { to: "/", label: "Accueil", icon: Home, end: true },
   { to: "/programme", label: "Programme", icon: Compass },
-  { to: "/documents", label: "Documents", icon: FileLock2 },
+  { to: "/documents", label: "Coffre-fort", icon: FileLock2 },
   { to: "/family", label: "Famille", icon: Users },
 ];
 
