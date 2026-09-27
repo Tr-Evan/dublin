@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { CalendarDays, Check, CloudUpload, FileLock2, Images, ListChecks, LoaderCircle, LogIn, LogOut, Newspaper, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { CalendarDays, Check, CloudUpload, FileLock2, Images, ListChecks, LoaderCircle, LogIn, LogOut, Newspaper, Pencil, Plus, ShieldCheck, Trash2, Wallet } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useAdminAuth } from "../auth/AdminAuth";
 import { useLocationSharing } from "../auth/LocationSharing";
 import LocationSharingControl from "../components/admin/LocationSharingControl";
@@ -200,7 +201,10 @@ function AdminWorkspace({ auth }) {
     <div className="space-y-10">
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div><Badge tone="mint" icon={ShieldCheck}>Session administrateur · {auth.session.user.email}</Badge><h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Le mode édition</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Outils disponibles dans les onglets : lieux, journal, coffre-fort et checklist.</p></div>
-        <Button variant="secondary" icon={LogOut} onClick={() => void logOut()}>Déconnexion</Button>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/budget" className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-mint/20 bg-mint/[0.06] px-4 text-sm font-semibold text-mint transition hover:bg-mint/[0.12]"><Wallet size={17} />Budget partagé</Link>
+          <Button variant="secondary" icon={LogOut} onClick={() => void logOut()}>Déconnexion</Button>
+        </div>
       </section>
 
       <nav aria-label="Sections d'administration" className="grid grid-cols-2 gap-2 rounded-3xl border border-white/[0.07] bg-white/[0.025] p-2 lg:grid-cols-4" role="tablist">

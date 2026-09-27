@@ -8,10 +8,12 @@ import Button from "../ui/Button";
 import FamilyUpdateComposer from "./FamilyUpdateComposer";
 import SectionHeading from "../ui/SectionHeading";
 import ImageGallery from "../ui/ImageGallery";
+import { useOfflineSyncState } from "../../hooks/useOfflineSync";
 
 export default function AdminTimeline() {
   const { session } = useAdminAuth();
   const { updates, setUpdates, loading, error, refresh } = useFamilyUpdates();
+  const { pendingCount, syncing, error: syncError, refreshPendingCount } = useOfflineSyncState();
   const [composing, setComposing] = useState(false);
   const [busy, setBusy] = useState("");
   const [actionError, setActionError] = useState("");
@@ -43,6 +45,8 @@ export default function AdminTimeline() {
         action={<Button icon={Send} onClick={() => setComposing(true)}>Partager un souvenir</Button>}
       />
       {(actionError || error) && <p role="alert" className="mb-4 rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-4 text-sm text-rose-200">{actionError || error}</p>}
+      {syncError && <p role="alert" className="mb-4 rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-4 text-sm text-rose-200">{syncError}</p>}
+      {(pendingCount > 0 || syncing) && <p role="status" className="mb-4 rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">{syncing ? "Envoi des souvenirs enregistrés hors ligne…" : `${pendingCount} souvenir${pendingCount === 1 ? "" : "s"} en attente d'envoi.`}</p>}
       {message && <p role="status" className="mb-4 rounded-2xl border border-mint/20 bg-mint/[0.06] p-4 text-sm text-mint">{message}</p>}
       {loading && !updates.length && <p className="text-sm text-muted">Chargement du journal…</p>}
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -58,7 +62,7 @@ export default function AdminTimeline() {
         ))}
         {!loading && !updates.length && <div className="glass-card rounded-2xl p-6 text-sm text-muted md:col-span-2 xl:col-span-3"><ImagePlus size={19} className="mb-3 text-mint" />Pas encore de souvenir. Ajoutez une première photo ou un mot après l’arrivée à Dublin.</div>}
       </div>
-      {composing && <FamilyUpdateComposer userId={session.user.id} onClose={() => setComposing(false)} onPublished={(update) => { setUpdates((current) => [...current, update].sort((first, second) => first.travel_date.localeCompare(second.travel_date) || first.travel_time.localeCompare(second.travel_time))); setMessage("Le souvenir est partagé avec la famille."); void refresh(); }} />}
+      {composing && <FamilyUpdateComposer userId={session.user.id} onClose={() => setComposing(false)} onQueued={() => { setMessage("Réseau indisponible. Sauvegardé hors-ligne, envoi automatique dès le retour de la connexion."); void refreshPendingCount(); }} onPublished={(update) => { setUpdates((current) => [...current, update].sort((first, second) => first.travel_date.localeCompare(second.travel_date) || first.travel_time.localeCompare(second.travel_time))); setMessage("Le souvenir est partagé avec la famille."); void refresh(); }} />}
     </section>
   );
 }

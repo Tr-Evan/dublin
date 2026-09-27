@@ -6,8 +6,10 @@ import { AdminAuthProvider, useAdminAuth } from "./auth/AdminAuth";
 import { LocationSharingProvider } from "./auth/LocationSharing";
 import Header from "./components/layout/Header";
 import BottomNavigation from "./components/layout/BottomNavigation";
+import { OfflineSyncProvider } from "./hooks/useOfflineSync";
 
 const Admin = lazy(() => import("./pages/Admin"));
+const Budget = lazy(() => import("./pages/Budget"));
 const Checklist = lazy(() => import("./pages/Checklist"));
 const Family = lazy(() => import("./pages/Family"));
 const Home = lazy(() => import("./pages/Home"));
@@ -24,7 +26,7 @@ function RouteLoader() {
 function AdminProtectedRoute({ children }) {
   const auth = useAdminAuth();
   if (auth.loading) return <div className="flex items-center justify-center gap-3 py-24 text-sm text-slate-300"><LoaderCircle size={19} className="animate-spin text-mint" />Vérification de la session…</div>;
-  if (!auth.isAdmin) return <Navigate to="/admin" replace />;
+  if (!auth.session?.access_token || !auth.isAdmin) return <Navigate to="/admin" replace />;
   return children;
 }
 
@@ -47,6 +49,7 @@ function AppContent() {
                 <Route path="/pubs" element={<Pubs />} />
                 <Route path="/family" element={<Family />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/budget" element={<AdminProtectedRoute><Budget /></AdminProtectedRoute>} />
                 <Route path="/documents" element={<AdminProtectedRoute><DocumentVault /></AdminProtectedRoute>} />
                 <Route path="/checklist" element={<AdminProtectedRoute><Checklist /></AdminProtectedRoute>} />
                 <Route path="*" element={<Home />} />
@@ -61,5 +64,5 @@ function AppContent() {
 }
 
 export default function App() {
-  return <BrowserRouter><AdminAuthProvider><LocationSharingProvider><AppContent /></LocationSharingProvider></AdminAuthProvider></BrowserRouter>;
+  return <BrowserRouter><AdminAuthProvider><OfflineSyncProvider><LocationSharingProvider><AppContent /></LocationSharingProvider></OfflineSyncProvider></AdminAuthProvider></BrowserRouter>;
 }

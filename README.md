@@ -54,11 +54,15 @@ L'accès aux tables applicatives est limité par RLS : seule la lecture de `fami
 
 Les billets importés dans les quatre emplacements prévus sont automatiquement copiés dans IndexedDB sur l'appareil courant. Pour les documents déjà présents, utilisez **Enregistrer hors ligne / Télécharger** ou **Ouvrir** sur chaque appareil avant le départ ; vérifiez que les quatre billets indiquent « Disponible hors ligne ». L'aperçu lit alors le blob local, sans dépendre du réseau ni du cache HTTP. L'accès hors ligne nécessite que la PWA et la session administrateur soient déjà disponibles sur l'appareil. La persistance dépend des quotas et règles d'éviction du navigateur : gardez également une copie des billets dans l'application de fichiers sécurisée de l'appareil.
 
-La PWA précache l'interface et mémorise les photos publiques consultées (couvertures de lieux et photos du journal familial) ainsi que les tuiles de carte déjà chargées. La météo conserve sa dernière réponse et utilise également un cache réseau. Les changements Realtime, la checklist et les nouvelles tuiles cartographiques nécessitent une connexion. Les documents privés restent disponibles hors ligne uniquement après leur enregistrement explicite dans le coffre-fort.
+La PWA précache l'interface et mémorise les photos publiques consultées (couvertures de lieux et photos du journal familial) ainsi que les tuiles de carte satellite et leurs labels déjà chargés (durée maximale de 30 jours). Les tuiles ne sont pas téléchargées par avance : ouvrez la zone cartographique voulue avant le départ pour mettre ses tuiles en cache. La météo conserve sa dernière réponse et utilise également un cache réseau. La checklist et le budget nécessitent une connexion. Les documents privés restent disponibles hors ligne uniquement après leur enregistrement explicite dans le coffre-fort.
+
+Les souvenirs du journal peuvent être rédigés hors ligne depuis l'espace admin. Le texte et les images déjà compressées sont conservés dans IndexedDB sur l'appareil, puis envoyés automatiquement au retour du réseau, tant qu'une session administrateur valide est disponible.
 
 ## 4. Checklist et météo
 
 La page `/checklist` est réservée aux administrateurs : Evan et Enola peuvent ajouter, cocher et supprimer les éléments. La liste est synchronisée en temps réel entre les appareils connectés. Elle n'est pas enregistrée localement ; une connexion à Supabase est nécessaire pour la charger ou la modifier.
+
+La page `/budget` est réservée aux comptes administrateurs et permet d'enregistrer les dépenses communes. Les dépenses sont protégées par RLS, synchronisées en temps réel et la balance calcule le remboursement nécessaire pour partager les frais à parts égales. Pour un projet Supabase existant, exécutez `supabase/migrations/20260927230000_create_expenses.sql` dans SQL Editor.
 
 Le tableau de bord récupère la météo actuelle et les prévisions sur sept jours du centre de Dublin auprès d'Open-Meteo, sans clé API. La dernière réponse est conservée dans le navigateur pour fournir un affichage de secours lorsque le réseau est indisponible.
 

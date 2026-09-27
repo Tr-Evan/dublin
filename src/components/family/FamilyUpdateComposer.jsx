@@ -8,7 +8,7 @@ const tripDates = [20, 21, 22, 23].map((day) => `2026-10-${day}`);
 const maxPhotoSize = 25 * 1024 * 1024;
 const inputClass = "mt-2 min-h-11 w-full rounded-xl border border-white/10 bg-ink/80 px-3 text-sm text-white outline-none transition placeholder:text-muted/70 focus:border-mint/40";
 
-export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
+export default function FamilyUpdateComposer({ userId, onClose, onPublished, onQueued }) {
   const [date, setDate] = useState(tripDates[0]);
   const [time, setTime] = useState(new Intl.DateTimeFormat("fr-CA", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Dublin", hourCycle: "h23" }).format(new Date()));
   const [title, setTitle] = useState("");
@@ -23,8 +23,9 @@ export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
     setBusy(true);
     setError("");
     try {
-      const update = await publishFamilyUpdate({ travelDate: date, travelTime: time, title, description, photos, userId });
-      onPublished(update);
+      const result = await publishFamilyUpdate({ travelDate: date, travelTime: time, title, description, photos, userId });
+      if (result.queued) onQueued?.();
+      else onPublished(result.update);
       onClose();
     } catch (publishError) {
       setError(publishError.message);

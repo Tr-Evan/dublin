@@ -122,6 +122,15 @@ create table if not exists public.family_updates (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.expenses (
+  id uuid primary key default gen_random_uuid(),
+  title text not null check (char_length(title) between 1 and 160),
+  amount numeric(10, 2) not null check (amount > 0),
+  paid_by text not null check (paid_by in ('Evan', 'Enola')),
+  created_at timestamptz not null default now(),
+  created_by uuid not null default auth.uid() references auth.users (id)
+);
+
 alter table public.places
   add column if not exists image_paths text[] not null default '{}';
 
@@ -190,6 +199,7 @@ alter table public.family_locations enable row level security;
 alter table public.travel_documents enable row level security;
 alter table public.departure_checklist enable row level security;
 alter table public.family_updates enable row level security;
+alter table public.expenses enable row level security;
 
 drop policy if exists "Trip admins can read their own membership" on public.trip_admins;
 create policy "Trip admins can read their own membership"
@@ -253,13 +263,19 @@ create policy "Trip admins delete travel updates"
 on public.family_updates for delete to authenticated
 using ((select public.is_trip_admin()));
 
+drop policy if exists "Trip admins manage shared expenses" on public.expenses;
+create policy "Trip admins manage shared expenses"
+on public.expenses for all to authenticated
+using ((select public.is_trip_admin()))
+with check ((select public.is_trip_admin()) and created_by = (select auth.uid()));
+
 revoke all on public.trip_admins, public.places, public.day_schedule, public.family_locations,
-  public.travel_documents, public.departure_checklist, public.family_updates
+  public.travel_documents, public.departure_checklist, public.family_updates, public.expenses
 from public, anon, authenticated;
 
 grant select on public.trip_admins to authenticated;
 grant select, insert, update, delete on public.places, public.day_schedule, public.family_locations,
-  public.travel_documents, public.departure_checklist to authenticated;
+  public.travel_documents, public.departure_checklist, public.expenses to authenticated;
 grant select, insert, update, delete on public.family_updates to authenticated;
 grant select on public.family_updates to anon;
 
@@ -319,6 +335,12 @@ create policy "Trip admins upload shared travel photos"
 on storage.objects for insert to authenticated
 with check (bucket_id = 'family-updates' and (select public.is_trip_admin()));
 
+drop policy if exists "Trip admins update shared travel photos" on storage.objects;
+create policy "Trip admins update shared travel photos"
+on storage.objects for update to authenticated
+using (bucket_id = 'family-updates' and (select public.is_trip_admin()))
+with check (bucket_id = 'family-updates' and (select public.is_trip_admin()));
+
 drop policy if exists "Trip admins delete shared travel photos" on storage.objects;
 create policy "Trip admins delete shared travel photos"
 on storage.objects for delete to authenticated
@@ -355,6 +377,13 @@ $$;
 do $$
 begin
   alter publication supabase_realtime add table public.departure_checklist;
+exception when duplicate_object then null;
+end;
+$$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.expenses;
 exception when duplicate_object then null;
 end;
 $$;

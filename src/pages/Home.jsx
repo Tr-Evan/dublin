@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ClipboardCheck, Plane, Sparkles } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Plane, Smartphone, Sparkles } from "lucide-react";
 import { trip } from "../data/itineraryData";
 import dublinSkyline from "../assets/dublin-skyline.svg";
 import hotelImage from "../assets/DUBSTGREFL-chambre-deluxe-superieure-riu-plaza-the-gresham-dublin-sejour-a-dublin-tui.png";
@@ -52,8 +52,51 @@ function HotelDetails({ className = "" }) {
 }
 
 export default function Home() {
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [isIos, setIsIos] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [showIosInstructions, setShowIosInstructions] = useState(false);
+  const [installError, setInstallError] = useState("");
   const countdown = useCountdown(trip.startDate);
   const countdownLabel = countdown.ended ? "Le séjour est terminé" : countdown.started ? "Profitez bien de Dublin !" : "avant le départ";
+
+  useEffect(() => {
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    setIsInstalled(standalone);
+    setIsIos(/iPhone|iPad|iPod/i.test(window.navigator.userAgent));
+
+    const handleInstallPrompt = (event) => {
+      event.preventDefault();
+      setInstallPrompt(event);
+    };
+    const handleInstalled = () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    };
+    window.addEventListener("beforeinstallprompt", handleInstallPrompt);
+    window.addEventListener("appinstalled", handleInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleInstallPrompt);
+      window.removeEventListener("appinstalled", handleInstalled);
+    };
+  }, []);
+
+  async function installApp() {
+    setInstallError("");
+    if (isIos) {
+      setShowIosInstructions((current) => !current);
+      return;
+    }
+    if (!installPrompt) return;
+    try {
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      if (choice.outcome === "accepted") setIsInstalled(true);
+      setInstallPrompt(null);
+    } catch (promptError) {
+      setInstallError(`L'installation n'a pas pu démarrer : ${promptError.message}`);
+    }
+  }
 
   return (
     <div className="space-y-12">
@@ -113,6 +156,26 @@ export default function Home() {
           <WeatherWidget />
         </div>
       </section>
+
+      {!isInstalled && (installPrompt || isIos) && (
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-3xl p-5 sm:flex sm:items-center sm:justify-between sm:gap-5 sm:p-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.17em] text-mint">Toujours à portée de main</p>
+            <h2 className="mt-2 text-lg font-semibold text-white">Installer le carnet de voyage</h2>
+            {showIosInstructions && <p className="mt-2 max-w-lg text-sm leading-6 text-slate-300">Dans Safari, touchez Partager puis « Sur l’écran d’accueil » pour installer l’application.</p>}
+            {installError && <p role="alert" className="mt-2 text-xs text-rose-200">{installError}</p>}
+          </div>
+          <motion.button
+            type="button"
+            onClick={() => void installApp()}
+            whileTap={{ scale: 0.97 }}
+            className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-mint px-5 text-sm font-semibold text-ink transition hover:bg-emerald-200 sm:mt-0 sm:w-auto"
+          >
+            <Smartphone size={18} />
+            {isIos ? "Comment installer l’app" : "Installer l’app sur le téléphone"}
+          </motion.button>
+        </motion.section>
+      )}
 
       <section aria-labelledby="preparatifs-title" className="glass-card rounded-3xl p-5 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6">
         <div>

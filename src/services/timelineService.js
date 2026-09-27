@@ -1,3 +1,4 @@
+import { openDB } from "idb";
 import { supabase } from "./supabaseClient";
 import compressImage from "../utils/compressImage";
 
@@ -5,6 +6,13 @@ const photoBucket = "family-updates";
 const allowedPhotoTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxUploadSize = 25 * 1024 * 1024;
 const cacheKey = "dublin-v3:family-timeline";
+const offlineQueueDatabase = openDB("dublin-offline-family-updates", 1, {
+  upgrade(database) {
+    if (!database.objectStoreNames.contains("posts")) {
+      database.createObjectStore("posts", { keyPath: "id" });
+    }
+  },
+});
 
 export function getCachedFamilyUpdates() {
   try {
@@ -47,27 +55,54 @@ export async function getFamilyUpdates() {
 
 export async function publishFamilyUpdate({ travelDate, travelTime, title, description, photos = [], userId }) {
   if (!supabase) throw new Error("Configurez Supabase pour publier dans le journal de bord.");
+  const draft = validateFamilyUpdate({ travelDate, travelTime, title, description, photos, userId });
+
+  const compressedPhotos = await Promise.all(
+    photos.map((photo) => compressImage(photo)),
+  );
+  const preparedDraft = { ...draft, photos: compressedPhotos };
+
+  if (navigator.onLine === false) {
+    const database = await offlineQueueDatabase;
+    await database.put("posts", { ...preparedDraft, queuedAt: Date.now() });
+    return { queued: true, update: null };
+  }
+
+  const update = await uploadPreparedFamilyUpdate(preparedDraft);
+  return { queued: false, update };
+}
+
+function validateFamilyUpdate({ travelDate, travelTime, title, description, photos, userId }) {
   const cleanedTitle = title.trim();
   if (!cleanedTitle || cleanedTitle.length > 120) throw new Error("Le titre doit contenir entre 1 et 120 caractères.");
-
+  if (!userId) throw new Error("Reconnectez-vous avant de publier un souvenir.");
   if (photos.length > 8) throw new Error("Publication limitée à 8 photos par souvenir.");
   if (photos.some((photo) => !allowedPhotoTypes.has(photo.type))) {
     throw new Error("Les photos doivent être au format JPEG, PNG ou WebP.");
   }
   if (photos.some((photo) => photo.size > maxUploadSize)) {
-    throw new Error("Une photo d'origine dépasse la limite de 12 Mo.");
+    throw new Error("Une photo d'origine dépasse la limite de 25 Mo.");
   }
 
-  const compressedPhotos = await Promise.all(
-    photos.map((photo) => compressImage(photo)),
-  );
+  return {
+    id: crypto.randomUUID(),
+    travelDate,
+    travelTime,
+    title: cleanedTitle,
+    description: description.trim(),
+    userId,
+    photos,
+  };
+}
+
+async function uploadPreparedFamilyUpdate(draft) {
   const imagePaths = [];
   try {
-    for (const preparedPhoto of compressedPhotos) {
-      const imagePath = `${userId}/${crypto.randomUUID()}.jpg`;
+    for (const [index, preparedPhoto] of draft.photos.entries()) {
+      const imagePath = `${draft.userId}/${draft.id}/${index}.jpg`;
       const { error } = await supabase.storage.from(photoBucket).upload(imagePath, preparedPhoto, {
         contentType: preparedPhoto.type,
-        upsert: false,
+        upsert: true,
       });
       if (error) throw new Error(`Une photo n'a pas pu être importée : ${error.message}`);
       imagePaths.push(imagePath);
@@ -83,17 +118,24 @@ export async function publishFamilyUpdate({ travelDate, travelTime, title, descr
   const { data, error } = await supabase
     .from("family_updates")
     .insert({
-      travel_date: travelDate,
-      travel_time: travelTime,
-      title: cleanedTitle,
-      description: description.trim(),
+      id: draft.id,
+      travel_date: draft.travelDate,
+      travel_time: draft.travelTime,
+      title: draft.title,
+      description: draft.description,
       image_path: imagePaths[0] ?? null,
       image_paths: imagePaths,
-      created_by: userId,
+      created_by: draft.userId,
     })
     .select("id, travel_date, travel_time, title, description, image_path, image_paths, created_at")
     .single();
   if (error) {
+    const existing = await supabase
+      .from("family_updates")
+      .select("id, travel_date, travel_time, title, description, image_path, image_paths, created_at")
+      .eq("id", draft.id)
+      .maybeSingle();
+    if (!existing.error && existing.data) return normalizeUpdate(existing.data);
     if (imagePaths.length) {
       const { error: cleanupError } = await supabase.storage.from(photoBucket).remove(imagePaths);
       if (cleanupError) throw new Error(`${error.message} La photo importée n'a pas pu être nettoyée : ${cleanupError.message}`);
@@ -101,6 +143,44 @@ export async function publishFamilyUpdate({ travelDate, travelTime, title, descr
     throw new Error(error.message);
   }
   return normalizeUpdate(data);
+}
+
+export async function getPendingFamilyUpdateCount() {
+  const database = await offlineQueueDatabase;
+  return database.count("posts");
+}
+
+export async function syncQueuedFamilyUpdates() {
+  if (!supabase) throw new Error("Configurez Supabase pour envoyer les souvenirs en attente.");
+  if (navigator.onLine === false) return { synced: 0, remaining: await getPendingFamilyUpdateCount() };
+
+  const database = await offlineQueueDatabase;
+  const queuedPosts = await database.getAll("posts");
+  if (!queuedPosts.length) return { synced: 0, remaining: 0 };
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw new Error(`Impossible de vérifier la session pour la synchronisation : ${sessionError.message}`);
+  if (!session?.access_token) throw new Error("Connectez-vous pour synchroniser les souvenirs enregistrés sur cet appareil.");
+  let synced = 0;
+  const failures = [];
+
+  for (const post of queuedPosts.sort((first, second) => first.queuedAt - second.queuedAt)) {
+    if (post.userId !== session.user.id) {
+      failures.push(`${post.title} : reconnectez-vous avec le compte qui a créé ce souvenir`);
+      continue;
+    }
+    try {
+      await uploadPreparedFamilyUpdate(post);
+      await database.delete("posts", post.id);
+      synced += 1;
+    } catch (syncError) {
+      failures.push(`${post.title} : ${syncError.message}`);
+    }
+  }
+
+  if (failures.length) {
+    throw new Error(`${failures.join(" · ")}. ${synced} publication(s) synchronisée(s), ${failures.length} en attente.`);
+  }
+  return { synced, remaining: await database.count("posts") };
 }
 
 export async function removeFamilyUpdate(update) {

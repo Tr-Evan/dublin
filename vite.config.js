@@ -24,6 +24,24 @@ export default defineConfig({
             },
           },
           {
+            urlPattern: /^https:\/\/server\.arcgisonline\.com\/ArcGIS\/rest\/services\/World_Imagery\/MapServer\/tile\/\d+\/\d+\/\d+/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "dublin-satellite-map-tiles",
+              expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/services\.arcgisonline\.com\/ArcGIS\/rest\/services\/Reference\/World_Boundaries_and_Places\/MapServer\/tile\/\d+\/\d+\/\d+/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "dublin-satellite-map-labels",
+              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             urlPattern: /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/(?:place-covers|family-updates)\//,
             handler: "CacheFirst",
             options: {
