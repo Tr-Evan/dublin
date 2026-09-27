@@ -1,8 +1,9 @@
 import { supabase } from "./supabaseClient";
+import compressImage from "../utils/compressImage";
 
 const photoBucket = "family-updates";
 const allowedPhotoTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-const maxUploadSize = 12 * 1024 * 1024;
+const maxUploadSize = 25 * 1024 * 1024;
 const cacheKey = "dublin-v3:family-timeline";
 
 export function getCachedFamilyUpdates() {
@@ -23,33 +24,6 @@ function normalizeUpdate(row) {
     photoUrls,
     photoUrl: photoUrls[0] ?? null,
   };
-}
-
-async function prepareFamilyPhoto(file) {
-  if (!allowedPhotoTypes.has(file.type)) throw new Error("La photo doit être au format JPEG, PNG ou WebP.");
-  if (file.size > maxUploadSize) throw new Error("La photo d'origine ne peut pas dépasser 12 Mo.");
-
-  let bitmap;
-  try {
-    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-    const scale = Math.min(1, 1_600 / bitmap.width, 1_600 / bitmap.height);
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("Impossible de préparer la photo sur cet appareil.");
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const jpeg = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.84));
-    if (!jpeg) throw new Error("Impossible de compresser la photo.");
-    if (jpeg.size > 5 * 1024 * 1024) throw new Error("La photo compressée dépasse encore 5 Mo ; choisissez une autre image.");
-    return new File([jpeg], `souvenir-${crypto.randomUUID()}.jpg`, { type: "image/jpeg" });
-  } catch (imageError) {
-    throw new Error(`Préparation de la photo impossible : ${imageError.message}`);
-  } finally {
-    bitmap?.close();
-  }
 }
 
 export async function getFamilyUpdates() {
@@ -77,10 +51,19 @@ export async function publishFamilyUpdate({ travelDate, travelTime, title, descr
   if (!cleanedTitle || cleanedTitle.length > 120) throw new Error("Le titre doit contenir entre 1 et 120 caractères.");
 
   if (photos.length > 8) throw new Error("Publication limitée à 8 photos par souvenir.");
+  if (photos.some((photo) => !allowedPhotoTypes.has(photo.type))) {
+    throw new Error("Les photos doivent être au format JPEG, PNG ou WebP.");
+  }
+  if (photos.some((photo) => photo.size > maxUploadSize)) {
+    throw new Error("Une photo d'origine dépasse la limite de 12 Mo.");
+  }
+
+  const compressedPhotos = await Promise.all(
+    photos.map((photo) => compressImage(photo)),
+  );
   const imagePaths = [];
   try {
-    for (const photo of photos) {
-      const preparedPhoto = await prepareFamilyPhoto(photo);
+    for (const preparedPhoto of compressedPhotos) {
       const imagePath = `${userId}/${crypto.randomUUID()}.jpg`;
       const { error } = await supabase.storage.from(photoBucket).upload(imagePath, preparedPhoto, {
         contentType: preparedPhoto.type,

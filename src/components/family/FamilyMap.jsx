@@ -73,8 +73,12 @@ export default function FamilyMap() {
         <>
           <MapContainer center={[Number(location.latitude), Number(location.longitude)]} zoom={14} scrollWheelZoom={false} zoomControl={false} className="family-map">
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright" rel="noreferrer">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            />
+            <TileLayer
+              attribution='Labels &copy; <a href="https://www.esri.com/" rel="noreferrer">Esri</a>'
+              url="https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
             />
             <ZoomControl position="bottomright" />
             <RecenterMap location={location} />

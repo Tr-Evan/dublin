@@ -5,6 +5,7 @@ import { publishFamilyUpdate } from "../../services/timelineService";
 import Button from "../ui/Button";
 
 const tripDates = [20, 21, 22, 23].map((day) => `2026-10-${day}`);
+const maxPhotoSize = 25 * 1024 * 1024;
 const inputClass = "mt-2 min-h-11 w-full rounded-xl border border-white/10 bg-ink/80 px-3 text-sm text-white outline-none transition placeholder:text-muted/70 focus:border-mint/40";
 
 export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
@@ -35,12 +36,16 @@ export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
   function setPhotoFiles(files) {
     setError("");
     const selected = Array.from(files ?? []);
+    if (selected.length > 8) {
+      setError("Vous ne pouvez sélectionner que 8 photos maximum par souvenir.");
+      return;
+    }
     if (selected.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) {
       setError("Choisissez uniquement des photos JPEG, PNG ou WebP.");
       return;
     }
-    if (selected.length > 8) {
-      setError("Sélection limitée à 8 photos.");
+    if (selected.some((file) => file.size > maxPhotoSize)) {
+      setError("Chaque photo doit faire 25 Mo maximum.");
       return;
     }
     setPhotos(selected);
@@ -77,7 +82,7 @@ export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
           >
             <ImagePlus size={22} className="text-mint" />
             <span className="text-sm font-medium">{photos.length ? `${photos.length} photo${photos.length === 1 ? "" : "s"} sélectionnée${photos.length === 1 ? "" : "s"}` : "Déposer des photos ou appuyer pour choisir"}</span>
-            <span className="text-xs text-muted">{photos.length ? photos.map((photo) => photo.name).join(" · ") : "Jusqu'à 8 photos · Optimisées avant partage"}</span>
+            <span className="text-xs text-muted">{photos.length ? photos.map((photo) => photo.name).join(" · ") : "Jusqu'à 8 photos · 25 Mo maximum par photo · Optimisées avant partage"}</span>
             <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => setPhotoFiles(event.target.files)} />
           </label>
           {!photos.length && <p className="flex items-center gap-2 text-xs text-muted"><CalendarDays size={14} className="text-mint" />Les photos sont facultatives : le souvenir peut aussi être publié sans image.</p>}
