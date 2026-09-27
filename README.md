@@ -62,7 +62,7 @@ Les souvenirs du journal peuvent être rédigés hors ligne depuis l'espace admi
 
 La page `/checklist` est réservée aux administrateurs : Evan et Enola peuvent ajouter, cocher et supprimer les éléments. La liste est synchronisée en temps réel entre les appareils connectés. Elle n'est pas enregistrée localement ; une connexion à Supabase est nécessaire pour la charger ou la modifier.
 
-La page `/budget` est réservée aux comptes administrateurs et permet d'enregistrer les dépenses communes. Les dépenses sont protégées par RLS, synchronisées en temps réel et la balance calcule le remboursement nécessaire pour partager les frais à parts égales. Pour un projet Supabase existant, exécutez `supabase/migrations/20260927230000_create_expenses.sql` dans SQL Editor.
+La page `/budget` est réservée aux comptes administrateurs et permet d'enregistrer toutes les dépenses du voyage, avec leur date et le choix de les diviser ou non. Les dépenses sont protégées par RLS et synchronisées en temps réel ; le mini-dashboard sépare le coût total, le remboursement calculé à partir des dépenses divisées et les dépenses personnelles payées par chacun. Pour un projet Supabase existant, exécutez d'abord `supabase/migrations/20260927230000_create_expenses.sql`, puis `supabase/migrations/20260927232000_add_expense_date_and_sharing.sql` dans SQL Editor.
 
 Le tableau de bord récupère la météo actuelle et les prévisions sur sept jours du centre de Dublin auprès d'Open-Meteo, sans clé API. La dernière réponse est conservée dans le navigateur pour fournir un affichage de secours lorsque le réseau est indisponible.
 

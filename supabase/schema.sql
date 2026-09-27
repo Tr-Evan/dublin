@@ -127,6 +127,8 @@ create table if not exists public.expenses (
   title text not null check (char_length(title) between 1 and 160),
   amount numeric(10, 2) not null check (amount > 0),
   paid_by text not null check (paid_by in ('Evan', 'Enola')),
+  expense_date date not null default current_date,
+  is_shared boolean not null default true,
   created_at timestamptz not null default now(),
   created_by uuid not null default auth.uid() references auth.users (id)
 );
