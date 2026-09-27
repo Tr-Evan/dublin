@@ -11,7 +11,7 @@ export default defineConfig({
       includeAssets: ["icons/dublin-mark.svg", "icons/apple-touch-icon.png", "manifest.json"],
       workbox: {
         navigateFallback: "/index.html",
-        globPatterns: ["**/*.{js,css,html,svg,ico,png,webp,json}"],
+        globPatterns: ["**/*.{js,css,html,svg,ico,png,jpg,jpeg,webp,json,woff,woff2}"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/[a-c]\.tile\.openstreetmap\.org\//,
@@ -23,20 +23,11 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/place-covers\//,
+            urlPattern: /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/(?:place-covers|family-updates)\//,
             handler: "CacheFirst",
             options: {
-              cacheName: "dublin-place-covers",
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 30 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/family-updates\//,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "dublin-family-memories",
-              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 14 },
+              cacheName: "dublin-public-storage",
+              expiration: { maxEntries: 160, maxAgeSeconds: 60 * 60 * 24 * 30 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },

@@ -51,7 +51,7 @@ export default function BottomNavigation() {
             <span>Plus</span>
           </button>
           <div className="hidden border-t border-white/[0.07] pt-4 md:mt-4 md:block">
-            <p className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.17em] text-muted">Votre séjour</p>
+            <p className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.17em] text-muted">Enola & Evan à Dublin</p>
             <LinkGroup links={moreLinks} onNavigate={() => setMenuOpen(false)} />
           </div>
         </div>

@@ -76,7 +76,7 @@ export async function publishFamilyUpdate({ travelDate, travelTime, title, descr
   const cleanedTitle = title.trim();
   if (!cleanedTitle || cleanedTitle.length > 120) throw new Error("Le titre doit contenir entre 1 et 120 caractères.");
 
-  if (photos.length > 8) throw new Error("Vous pouvez publier jusqu'à 8 photos par souvenir.");
+  if (photos.length > 8) throw new Error("Publication limitée à 8 photos par souvenir.");
   const imagePaths = [];
   try {
     for (const photo of photos) {

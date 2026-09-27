@@ -39,7 +39,7 @@ export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
       return;
     }
     if (selected.length > 8) {
-      setError("Vous pouvez sélectionner jusqu'à 8 photos.");
+      setError("Sélection limitée à 8 photos.");
       return;
     }
     setPhotos(selected);
@@ -50,23 +50,23 @@ export default function FamilyUpdateComposer({ userId, onClose, onPublished }) {
       <section className="glass-card modal-scroll flex max-h-[100dvh] w-full max-w-xl flex-col overflow-y-auto rounded-t-3xl p-5 sm:max-h-[90dvh] sm:rounded-3xl sm:p-7" onClick={(event) => event.stopPropagation()}>
         <div className="mb-5 flex items-start justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-mint">Un petit mot de Dublin</p><h2 id="family-update-title" className="mt-2 text-xl font-semibold text-white">Partager un souvenir</h2><p className="mt-1 text-sm text-muted">En direct sur la timeline de la famille.</p></div>
-          <button type="button" disabled={busy} onClick={onClose} aria-label="Fermer le formulaire" className="rounded-xl border border-white/10 p-2 text-slate-300 transition hover:text-white disabled:opacity-40"><X size={18} /></button>
+          <Button type="button" variant="secondary" icon={X} disabled={busy} onClick={onClose} aria-label="Fermer le formulaire" className="min-h-10 px-3" />
         </div>
         <form onSubmit={(event) => void submit(event)} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <label className="text-xs font-medium text-slate-300">Jour<select required value={date} onChange={(event) => setDate(event.target.value)} className={inputClass}>{tripDates.map((day) => <option key={day} value={day}>{new Date(`${day}T12:00:00`).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long" })}</option>)}</select></label>
             <label className="text-xs font-medium text-slate-300">Heure à Dublin<input type="time" required value={time} onChange={(event) => setTime(event.target.value)} className={inputClass} /></label>
           </div>
-          <label className="block text-xs font-medium text-slate-300">Titre<input required maxLength={120} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex. Enfin arrivées à Trinity !" className={inputClass} /></label>
-          <label className="block text-xs font-medium text-slate-300">Votre message <span className="text-muted">(facultatif)</span><textarea maxLength={1200} rows={4} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Racontez ce beau moment à la famille…" className={`${inputClass} resize-y py-3`} /></label>
+          <label className="block text-xs font-medium text-slate-300">Titre<input required maxLength={120} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex. Découverte de Trinity College" className={inputClass} /></label>
+          <label className="block text-xs font-medium text-slate-300">Message <span className="text-muted">(facultatif)</span><textarea maxLength={1200} rows={4} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Quelques mots pour la famille…" className={`${inputClass} resize-y py-3`} /></label>
           <label
-            className={`flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-5 text-center transition ${dragging ? "border-mint bg-mint/[0.08]" : "border-white/20 bg-white/[0.025] hover:border-mint/45"} ${photo ? "text-mint" : "text-slate-300"}`}
+            className={`flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-5 text-center transition ${dragging ? "border-mint bg-mint/[0.08]" : "border-white/20 bg-white/[0.025] hover:border-mint/45"} ${photos.length ? "text-mint" : "text-slate-300"}`}
             onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
             onDrop={(event) => { event.preventDefault(); setDragging(false); setPhotoFiles(event.dataTransfer.files); }}
           >
             <ImagePlus size={22} className="text-mint" />
-            <span className="text-sm font-medium">{photos.length ? `${photos.length} photo${photos.length === 1 ? "" : "s"} sélectionnée${photos.length === 1 ? "" : "s"}` : "Glissez vos photos ici ou appuyez pour choisir"}</span>
+            <span className="text-sm font-medium">{photos.length ? `${photos.length} photo${photos.length === 1 ? "" : "s"} sélectionnée${photos.length === 1 ? "" : "s"}` : "Déposer des photos ou appuyer pour choisir"}</span>
             <span className="text-xs text-muted">{photos.length ? photos.map((photo) => photo.name).join(" · ") : "Jusqu'à 8 photos · Optimisées avant partage"}</span>
             <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => setPhotoFiles(event.target.files)} />
           </label>

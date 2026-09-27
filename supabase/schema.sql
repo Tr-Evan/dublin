@@ -187,34 +187,25 @@ on public.trip_admins for select to authenticated
 using (user_id = (select auth.uid()));
 
 drop policy if exists "Published places are readable" on public.places;
-create policy "Published places are readable"
-on public.places for select to anon, authenticated
-using (true);
-
 drop policy if exists "Trip admins manage places" on public.places;
-create policy "Trip admins manage places"
+drop policy if exists "Trip admins can access places" on public.places;
+create policy "Trip admins can access places"
 on public.places for all to authenticated
 using ((select public.is_trip_admin()))
 with check ((select public.is_trip_admin()));
 
 drop policy if exists "Family can read the itinerary" on public.day_schedule;
-create policy "Family can read the itinerary"
-on public.day_schedule for select to anon, authenticated
-using (true);
-
 drop policy if exists "Trip admins manage the itinerary" on public.day_schedule;
-create policy "Trip admins manage the itinerary"
+drop policy if exists "Trip admins can access the itinerary" on public.day_schedule;
+create policy "Trip admins can access the itinerary"
 on public.day_schedule for all to authenticated
 using ((select public.is_trip_admin()))
 with check ((select public.is_trip_admin()));
 
 drop policy if exists "Only enabled approximate location is public" on public.family_locations;
-create policy "Only enabled approximate location is public"
-on public.family_locations for select to anon, authenticated
-using (is_sharing = true and updated_at > now() - interval '5 minutes');
-
 drop policy if exists "Trip admins manage location sharing" on public.family_locations;
-create policy "Trip admins manage location sharing"
+drop policy if exists "Trip admins can access location sharing" on public.family_locations;
+create policy "Trip admins can access location sharing"
 on public.family_locations for all to authenticated
 using ((select public.is_trip_admin()))
 with check ((select public.is_trip_admin()));
@@ -241,19 +232,26 @@ create policy "Trip admins publish travel updates"
 on public.family_updates for insert to authenticated
 with check ((select public.is_trip_admin()) and created_by = (select auth.uid()));
 
+drop policy if exists "Trip admins update travel updates" on public.family_updates;
+create policy "Trip admins update travel updates"
+on public.family_updates for update to authenticated
+using ((select public.is_trip_admin()))
+with check ((select public.is_trip_admin()));
+
 drop policy if exists "Trip admins delete travel updates" on public.family_updates;
 create policy "Trip admins delete travel updates"
 on public.family_updates for delete to authenticated
 using ((select public.is_trip_admin()));
 
-grant select on public.places, public.day_schedule, public.family_locations to anon, authenticated;
-grant select on public.family_updates to anon, authenticated;
-grant insert, update, delete on public.places, public.day_schedule, public.family_locations to authenticated;
-grant select, insert, update, delete on public.trip_admins, public.travel_documents to authenticated;
-grant select, insert, update, delete on public.departure_checklist to authenticated;
-grant insert, delete on public.family_updates to authenticated;
-revoke all on public.trip_admins, public.travel_documents from anon;
-revoke all on public.departure_checklist from anon;
+revoke all on public.trip_admins, public.places, public.day_schedule, public.family_locations,
+  public.travel_documents, public.departure_checklist, public.family_updates
+from public, anon, authenticated;
+
+grant select on public.trip_admins to authenticated;
+grant select, insert, update, delete on public.places, public.day_schedule, public.family_locations,
+  public.travel_documents, public.departure_checklist to authenticated;
+grant select, insert, update, delete on public.family_updates to authenticated;
+grant select on public.family_updates to anon;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values

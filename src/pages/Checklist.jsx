@@ -67,12 +67,12 @@ export default function Checklist() {
     <div className="space-y-8">
       <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="hero-panel relative overflow-hidden rounded-[2rem] p-6 sm:p-9">
         <div className="relative flex flex-wrap items-end justify-between gap-5">
-          <div><Badge tone="mint" icon={ListChecks}>Spécial Evan & Enola</Badge><h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">Valise & derniers achats.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">Tout ce qu'il ne faut pas oublier avant de partir. Cochez au fur et à mesure : la liste se synchronise entre vos appareils.</p></div>
+          <div><Badge tone="mint" icon={ListChecks}>Enola & Evan</Badge><h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">Checklist du duo.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">Les essentiels à acheter et à emporter. La liste se synchronise entre les appareils connectés.</p></div>
           <div className="glass-card rounded-2xl px-5 py-3"><p className="text-2xl font-semibold text-white">{completedCount}<span className="text-muted"> / {items.length}</span></p><p className="text-xs text-muted">choses prêtes</p></div>
         </div>
       </motion.section>
 
-      {!supabase && <p role="alert" className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">Configurez Supabase pour synchroniser cette liste entre vos appareils.</p>}
+      {!supabase && <p role="alert" className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">Configurez Supabase pour synchroniser cette liste entre les appareils connectés.</p>}
       {(error || loadError) && <p role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-4 text-sm text-rose-200">{error || loadError}</p>}
 
       <section className="glass-card rounded-3xl p-5 sm:p-6">
@@ -82,7 +82,7 @@ export default function Checklist() {
           <label className="text-xs font-medium text-slate-300">Description <span className="text-muted">(facultative)</span><input maxLength={400} disabled={!session || busy === "add"} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Ex. Celui dans le tiroir du salon" className="mt-2 min-h-11 w-full rounded-xl border border-white/10 bg-ink/80 px-3 text-sm text-white outline-none transition focus:border-mint/40 disabled:opacity-50" /></label>
           <Button type="submit" icon={busy === "add" ? LoaderCircle : Plus} disabled={!session || busy === "add" || !title.trim()}>{busy === "add" ? "Ajout…" : "Ajouter"}</Button>
         </form>
-        {!session && <p className="mt-3 text-xs text-muted">Connectez-vous à l'espace admin pour ajouter et cocher des éléments.</p>}
+        {!session && <p className="mt-3 text-xs text-muted">Connexion à l'espace admin requise pour ajouter et cocher des éléments.</p>}
       </section>
 
       <section>
@@ -102,7 +102,7 @@ export default function Checklist() {
               </motion.li>
             ))}
           </ul>
-        ) : <div className="glass-card rounded-3xl p-10 text-center"><ListChecks size={27} className="mx-auto text-mint" /><p className="mt-3 font-medium text-white">{loading ? "Chargement de la liste…" : "La liste est vide pour le moment."}</p><p className="mt-1 text-sm text-muted">Ajoutez votre premier indispensable de voyage.</p></div>}
+        ) : <div className="glass-card rounded-3xl p-10 text-center"><ListChecks size={27} className="mx-auto text-mint" /><p className="mt-3 font-medium text-white">{loading ? "Chargement de la liste…" : "La liste est vide pour le moment."}</p><p className="mt-1 text-sm text-muted">Ajoutez le premier indispensable du voyage.</p></div>}
         {session && <button type="button" onClick={() => void refresh()} className="mt-4 text-xs font-medium text-mint hover:text-emerald-200">Actualiser la checklist</button>}
       </section>
     </div>

@@ -38,7 +38,7 @@ export default function ChecklistPreview() {
       {!isAdmin ? (
         <div className="rounded-2xl border border-dashed border-white/10 px-4 py-7 text-center">
           <ListChecks size={23} className="mx-auto text-mint" />
-          <p className="mt-2 text-sm text-slate-300">Connectez-vous pour consulter la checklist partagée.</p>
+          <p className="mt-2 text-sm text-slate-300">La checklist du duo est réservée aux voyageurs connectés.</p>
           <Link to="/admin" className="mt-3 inline-flex text-xs font-semibold text-mint hover:text-emerald-200">Accéder à l'espace privé <ArrowRight size={14} className="ml-1" /></Link>
         </div>
       ) : items.length ? (
@@ -54,7 +54,7 @@ export default function ChecklistPreview() {
         <div className="rounded-2xl border border-dashed border-white/10 px-4 py-7 text-center">
           <ListChecks size={23} className="mx-auto text-mint" />
           <p className="mt-2 text-sm text-slate-300">{loading ? "Chargement de la checklist…" : "La checklist se prépare."}</p>
-          <p className="mt-1 text-xs text-muted">Ajoutez vos indispensables depuis votre espace admin.</p>
+          <p className="mt-1 text-xs text-muted">Ajoutez les indispensables depuis l’espace admin.</p>
         </div>
       )}
     </section>

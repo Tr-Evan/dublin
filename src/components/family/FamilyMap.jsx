@@ -3,6 +3,7 @@ import { Circle, CircleMarker, MapContainer, TileLayer, useMap, ZoomControl } fr
 import { MapPin, Radio } from "lucide-react";
 import { getSharedLocation } from "../../services/familyService";
 import { supabase } from "../../services/supabaseClient";
+import { useAdminAuth } from "../../auth/AdminAuth";
 import Badge from "../ui/Badge";
 
 function RecenterMap({ location }) {
@@ -14,12 +15,13 @@ function RecenterMap({ location }) {
 }
 
 export default function FamilyMap() {
+  const { isAdmin } = useAdminAuth();
   const [location, setLocation] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(Boolean(supabase));
 
   useEffect(() => {
-    if (!supabase) {
+    if (!supabase || !isAdmin) {
       setLoading(false);
       return undefined;
     }
@@ -45,7 +47,7 @@ export default function FamilyMap() {
       active = false;
       void supabase.removeChannel(channel);
     };
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!location) return undefined;
@@ -60,7 +62,7 @@ export default function FamilyMap() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mint">La petite balise familiale</p>
           <h2 className="mt-2 text-xl font-semibold text-white">Où en est le voyage ?</h2>
-          <p className="mt-1 text-sm text-muted">La position est partagée uniquement si Evan ou Enola l'active depuis l'espace admin.</p>
+          <p className="mt-1 text-sm text-muted">{isAdmin ? "La position est accessible uniquement aux comptes voyageurs autorisés." : "La localisation est réservée aux comptes voyageurs autorisés."}</p>
         </div>
         <Badge tone={location ? "mint" : "neutral"} icon={location ? Radio : MapPin}>
           {loading ? "Connexion…" : location ? "Partage activé" : "Position privée"}
@@ -87,7 +89,7 @@ export default function FamilyMap() {
         <div className="mx-5 mb-5 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-center sm:mx-6">
           <MapPin size={23} className="mx-auto text-mint" />
           <p className="mt-3 text-sm font-medium text-white">{loading ? "Chargement de la position…" : "Aucune position en direct"}</p>
-          <p className="mt-1 text-xs leading-5 text-muted">Le voyage continue en privé. Les lieux et le programme restent visibles ci-dessous.</p>
+          <p className="mt-1 text-xs leading-5 text-muted">{isAdmin ? "Aucune position n’est partagée pour le moment." : "La position reste privée sur cette page publique."}</p>
         </div>
       )}
     </section>

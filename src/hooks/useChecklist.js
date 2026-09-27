@@ -14,7 +14,7 @@ export default function useChecklist(enabled = true) {
     }
     if (!supabase) {
       setLoading(false);
-      setError("Configurez Supabase pour enregistrer et synchroniser votre checklist.");
+      setError("Configurez Supabase pour enregistrer et synchroniser la checklist.");
       return;
     }
     setLoading(true);

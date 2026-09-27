@@ -184,7 +184,7 @@ function AdminWorkspace({ auth }) {
   return (
     <div className="space-y-10">
       <section className="flex flex-wrap items-start justify-between gap-4">
-        <div><Badge tone="mint" icon={ShieldCheck}>Session administrateur · {auth.session.user.email}</Badge><h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Le mode édition</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Retrouvez vos outils dans les onglets ci-dessous : lieux, journal, coffre-fort et checklist.</p></div>
+        <div><Badge tone="mint" icon={ShieldCheck}>Session administrateur · {auth.session.user.email}</Badge><h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Le mode édition</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Outils disponibles dans les onglets : lieux, journal, coffre-fort et checklist.</p></div>
         <Button variant="secondary" icon={LogOut} onClick={() => void logOut()}>Déconnexion</Button>
       </section>
 
@@ -195,7 +195,7 @@ function AdminWorkspace({ auth }) {
       {activeTab === "places" && <div id="admin-panel-places" role="tabpanel" aria-labelledby="admin-tab-places" className="space-y-8">
       <LocationSharingControl />
       <section className="glass-card rounded-3xl p-5 sm:p-6">
-        <SectionHeading eyebrow="Carnet partagé" title="Adresses du voyage" description="Les modifications sont enregistrées dans Supabase et apparaissent en direct chez votre famille." action={<Button icon={Plus} onClick={() => { setAdding(true); setEditing(null); }}>Ajouter</Button>} />
+        <SectionHeading eyebrow="Carnet partagé" title="Adresses du voyage" description="Les modifications sont enregistrées dans Supabase et partagées avec la famille en temps réel." action={<Button icon={Plus} onClick={() => { setAdding(true); setEditing(null); }}>Ajouter</Button>} />
         <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Catégorie d'adresses">
           {placeKinds.map((item) => <button key={item.key} type="button" role="tab" aria-selected={kind === item.key} onClick={() => { setKind(item.key); setEditing(null); setAdding(false); }} className={`rounded-full border px-4 py-2 text-sm font-medium transition ${kind === item.key ? "border-mint/30 bg-mint/[0.1] text-mint" : "border-white/10 bg-white/[0.025] text-slate-400 hover:text-white"}`}>{item.label}<span className="ml-2 text-xs opacity-70">{dataByKind[item.key].places.length}</span></button>)}
         </div>
@@ -213,15 +213,6 @@ function AdminWorkspace({ auth }) {
             return (
               <div key={place.id} className="space-y-3">
                 <PlaceCard place={place} />
-                <div className="glass-card space-y-3 rounded-2xl p-4">
-                  <label className="flex items-center gap-2 text-xs font-medium text-slate-300"><CalendarDays size={15} className="text-mint" />Programmer la visite</label>
-                  <select value={activity?.visit_date ?? ""} disabled={busy === place.id} onChange={(event) => void updateDate(place.id, event.target.value)} className="min-h-10 w-full rounded-xl border border-white/10 bg-panel px-3 text-sm text-white outline-none focus:border-mint/40">
-                    <option value="">Pas encore planifiée</option>
-                    {dates.map((date) => <option key={date} value={date}>{new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</option>)}
-                  </select>
-                  {activity && <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300"><input type="checkbox" checked={activity.visited} disabled={busy === place.id} onChange={() => void toggleVisited(activity)} className="accent-[#79f2b2]" /><Check size={15} className="text-mint" />Visité · visible pour la famille</label>}
-                  <div className="flex gap-2 border-t border-white/[0.06] pt-3"><button type="button" onClick={() => { setKind(place.kind); setAdding(false); setEditing(place); window.scrollTo({ top: 300, behavior: "smooth" }); }} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 text-xs font-medium text-slate-300 transition hover:text-mint"><Pencil size={14} />Modifier</button><button type="button" onClick={() => void remove(place)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-medium text-slate-400 transition hover:text-rose-200"><Trash2 size={14} />Supprimer</button></div>
-                </div>
               </div>
             );
           })}
@@ -240,7 +231,7 @@ export default function Admin() {
 
   if (!hasSupabaseConfig) return <div className="glass-card mx-auto max-w-xl rounded-3xl p-6"><h1 className="text-2xl font-semibold text-white">Configurez Supabase</h1><p className="mt-3 text-sm leading-6 text-slate-400">Créez un fichier .env à partir de .env.example, renseignez l'URL du projet et sa clé anon, puis exécutez supabase/schema.sql.</p></div>;
   if (auth.loading) return <div className="flex items-center justify-center gap-3 py-24 text-sm text-slate-300"><LoaderCircle size={19} className="animate-spin text-mint" />Vérification de la session…</div>;
-  if (!auth.session) return <div className="space-y-5"><SectionHeading eyebrow="Enola & Evan" title="Votre espace privé" description="Connectez-vous pour modifier le carnet, gérer les billets et activer le partage de position." /><SignInForm onSignIn={auth.signIn} authError={auth.error} /></div>;
+  if (!auth.session) return <div className="space-y-5"><SectionHeading eyebrow="Enola & Evan" title="Espace privé" description="Connexion requise pour gérer le carnet, les billets et le partage de position." /><SignInForm onSignIn={auth.signIn} authError={auth.error} /></div>;
   if (!auth.isAdmin) return <DeniedSession auth={auth} />;
   return <AdminWorkspace auth={auth} />;
 }

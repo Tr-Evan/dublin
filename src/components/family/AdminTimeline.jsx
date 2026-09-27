@@ -39,7 +39,7 @@ export default function AdminTimeline() {
       <SectionHeading
         eyebrow="En direct avec la famille"
         title="Le journal de bord"
-        description="Racontez vos petites aventures, à deux. Chaque mot et photo est partagé en direct sur /family."
+        description="Publiez les découvertes d’Enola & Evan. Chaque message et chaque photo apparaît en direct sur /family."
         action={<Button icon={Send} onClick={() => setComposing(true)}>Partager un souvenir</Button>}
       />
       {(actionError || error) && <p role="alert" className="mb-4 rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-4 text-sm text-rose-200">{actionError || error}</p>}
@@ -56,9 +56,9 @@ export default function AdminTimeline() {
             {update.description && <p className="px-4 pb-4 text-sm leading-5 text-slate-400">{update.description}</p>}
           </article>
         ))}
-        {!loading && !updates.length && <div className="glass-card rounded-2xl p-6 text-sm text-muted md:col-span-2 xl:col-span-3"><ImagePlus size={19} className="mb-3 text-mint" />Pas encore de souvenir. Publiez votre première photo ou un petit mot après votre arrivée.</div>}
+        {!loading && !updates.length && <div className="glass-card rounded-2xl p-6 text-sm text-muted md:col-span-2 xl:col-span-3"><ImagePlus size={19} className="mb-3 text-mint" />Pas encore de souvenir. Ajoutez une première photo ou un mot après l’arrivée à Dublin.</div>}
       </div>
-      {composing && <FamilyUpdateComposer userId={session.user.id} onClose={() => setComposing(false)} onPublished={(update) => { setUpdates((current) => [...current, update].sort((first, second) => first.travel_date.localeCompare(second.travel_date) || first.travel_time.localeCompare(second.travel_time))); setMessage("Le souvenir est en ligne pour votre famille."); void refresh(); }} />}
+      {composing && <FamilyUpdateComposer userId={session.user.id} onClose={() => setComposing(false)} onPublished={(update) => { setUpdates((current) => [...current, update].sort((first, second) => first.travel_date.localeCompare(second.travel_date) || first.travel_time.localeCompare(second.travel_time))); setMessage("Le souvenir est partagé avec la famille."); void refresh(); }} />}
     </section>
   );
 }

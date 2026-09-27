@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { LoaderCircle } from "lucide-react";
@@ -5,14 +6,19 @@ import { AdminAuthProvider, useAdminAuth } from "./auth/AdminAuth";
 import { LocationSharingProvider } from "./auth/LocationSharing";
 import Header from "./components/layout/Header";
 import BottomNavigation from "./components/layout/BottomNavigation";
-import DocumentVault from "./components/documents/DocumentVault";
-import Admin from "./pages/Admin";
-import Checklist from "./pages/Checklist";
-import Family from "./pages/Family";
-import Home from "./pages/Home";
-import Visites from "./pages/Visites";
-import Food from "./pages/Food";
-import Pubs from "./pages/Pubs";
+
+const Admin = lazy(() => import("./pages/Admin"));
+const Checklist = lazy(() => import("./pages/Checklist"));
+const Family = lazy(() => import("./pages/Family"));
+const Home = lazy(() => import("./pages/Home"));
+const Visites = lazy(() => import("./pages/Visites"));
+const Food = lazy(() => import("./pages/Food"));
+const Pubs = lazy(() => import("./pages/Pubs"));
+const DocumentVault = lazy(() => import("./components/documents/DocumentVault"));
+
+function RouteLoader() {
+  return <div className="flex min-h-[50vh] items-center justify-center gap-3 text-sm text-slate-300" role="status"><LoaderCircle size={20} className="animate-spin text-mint" />Chargement du carnet…</div>;
+}
 
 function AdminProtectedRoute({ children }) {
   const auth = useAdminAuth();
@@ -30,21 +36,23 @@ function AppContent() {
       <main className="mx-auto max-w-7xl px-5 pb-28 pt-8 sm:px-8 sm:pt-10 md:ml-64 md:px-10 md:pb-12 md:pt-12">
         <AnimatePresence mode="wait">
           <motion.div key={location.pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22 }}>
-            <Routes location={location}>
-              <Route path="/" element={<Home />} />
-              <Route path="/visites" element={<Visites />} />
-              <Route path="/food" element={<Food />} />
-              <Route path="/pubs" element={<Pubs />} />
-              <Route path="/family" element={<Family />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/documents" element={<AdminProtectedRoute><DocumentVault /></AdminProtectedRoute>} />
-              <Route path="/checklist" element={<AdminProtectedRoute><Checklist /></AdminProtectedRoute>} />
-              <Route path="*" element={<Home />} />
-            </Routes>
+            <Suspense fallback={<RouteLoader />}>
+              <Routes location={location}>
+                <Route path="/" element={<Home />} />
+                <Route path="/visites" element={<Visites />} />
+                <Route path="/food" element={<Food />} />
+                <Route path="/pubs" element={<Pubs />} />
+                <Route path="/family" element={<Family />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/documents" element={<AdminProtectedRoute><DocumentVault /></AdminProtectedRoute>} />
+                <Route path="/checklist" element={<AdminProtectedRoute><Checklist /></AdminProtectedRoute>} />
+                <Route path="*" element={<Home />} />
+              </Routes>
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </main>
-      <footer className="pb-24 text-center text-xs text-muted md:ml-64 md:pb-8">Fait avec ☘ pour votre escapade à Dublin · octobre 2026</footer>
+      <footer className="pb-24 text-center text-xs text-muted md:ml-64 md:pb-8">Enola & Evan à Dublin · octobre 2026</footer>
     </div>
   );
 }

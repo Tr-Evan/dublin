@@ -42,9 +42,9 @@ export default function Family() {
       <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="hero-panel relative overflow-hidden rounded-[2rem] p-6 sm:p-9">
         <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-mint/[0.09] blur-3xl" />
         <div className="relative">
-          <Badge tone="mint" icon={Sparkles}>Evan & Enola.</Badge>
+          <Badge tone="mint" icon={Sparkles}>Enola & Evan.</Badge>
           <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">Un petit coucou de Dublin</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Quatre jours de découvertes à Dublin. Retrouvez leurs photos et petits mots au fil de la journée.</p>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Quatre jours de découvertes à Dublin. Retrouvez les photos et petits mots d’Enola & Evan au fil du séjour.</p>
           <p className="mt-3 flex items-center gap-2 text-xs text-slate-400"><LockKeyhole size={14} className="text-mint" />La position n'apparaît que si Evan ou Enola active volontairement le partage.</p>
         </div>
       </motion.section>
@@ -53,7 +53,7 @@ export default function Family() {
       <FamilyMap />
 
       <section>
-        <SectionHeading eyebrow="20 — 23 octobre 2026" title="Le journal de bord" description={updatesLoading ? "Chargement des nouvelles…" : "Les dernières nouvelles d'Evan et de sa sœur, en temps réel."} />
+        <SectionHeading eyebrow="20 — 23 octobre 2026" title="Le journal de bord" description={updatesLoading ? "Chargement des nouvelles…" : "Les nouvelles d’Enola & Evan, en temps réel."} />
         {updatesError && <p role="alert" className="mb-4 rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-4 text-sm text-rose-200">{updatesError}</p>}
         {updates.length || schedule.length ? (
           <div className="max-w-3xl">
@@ -76,11 +76,11 @@ export default function Family() {
           <div className="glass-card max-w-3xl rounded-3xl p-7 text-center sm:p-10">
             <Camera size={27} className="mx-auto text-mint" />
             <p className="mt-4 font-semibold text-white">{updatesLoading ? "On prépare les premières nouvelles…" : "Le voyage n'a pas encore commencé !"}</p>
-            <p className="mt-2 text-sm leading-6 text-slate-400">Les messages et les photos partagés depuis Dublin apparaîtront ici, du plus ancien au plus récent.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-400">Les messages et photos d’Enola & Evan apparaîtront ici, du plus ancien au plus récent.</p>
           </div>
         )}
         {!updatesLoading && updates.length > 0 && updates.every((update) => !tripDays.some(({ key }) => key === update.travel_date)) && <p className="text-sm text-muted">Aucun souvenir pour ces dates pour le moment.</p>}
-        {scheduleError && <p role="alert" className="mt-4 text-sm text-rose-200">{scheduleError}</p>}
+        {scheduleError && <p role="status" className="mt-4 text-sm text-slate-400">Le programme détaillé sera disponible aux voyageurs connectés. Les nouvelles du journal restent consultables ici.</p>}
       </section>
       <p className="pb-3 text-center text-xs text-muted">{trip.title} · octobre 2026</p>
     </div>

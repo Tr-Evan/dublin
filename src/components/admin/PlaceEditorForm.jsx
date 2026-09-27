@@ -38,7 +38,7 @@ export default function PlaceEditorForm({ place, kind, onSave, onCancel }) {
   function selectImages(fileList) {
     const selected = Array.from(fileList ?? []);
     if (selected.length > 8) {
-      setError("Vous pouvez importer jusqu'à 8 photos.");
+      setError("Import limité à 8 photos.");
       return;
     }
     if (selected.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) {
@@ -68,7 +68,7 @@ export default function PlaceEditorForm({ place, kind, onSave, onCancel }) {
     <form onSubmit={submit} className="glass-card space-y-5 rounded-3xl p-5 sm:p-6">
       <div className="flex items-center justify-between gap-4">
         <h3 className="text-lg font-semibold text-white">{place ? "Modifier l'adresse" : "Ajouter une adresse"}</h3>
-        {place && <button type="button" onClick={onCancel} className="rounded-xl p-2 text-muted transition hover:bg-white/[0.06] hover:text-white" aria-label="Annuler la modification"><X size={18} /></button>}
+        {place && <Button type="button" variant="secondary" icon={X} onClick={onCancel} aria-label="Annuler la modification" className="min-h-10 px-3" />}
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="text-xs font-medium text-slate-300">Nom du lieu<input className={inputClass} maxLength={120} required value={values.name} onChange={(event) => update("name", event.target.value)} placeholder="Ex. Trinity College" /></label>
@@ -88,11 +88,11 @@ export default function PlaceEditorForm({ place, kind, onSave, onCancel }) {
         onDrop={(event) => { event.preventDefault(); setDragging(false); selectImages(event.dataTransfer.files); }}
       >
         <ImagePlus size={22} className="text-mint" />
-        <span>{images.length ? `${images.length} nouvelle${images.length === 1 ? "" : "s"} photo${images.length === 1 ? "" : "s"} sélectionnée${images.length === 1 ? "" : "s"}` : "Déposez vos photos ou appuyez pour choisir"}</span>
+        <span>{images.length ? `${images.length} nouvelle${images.length === 1 ? "" : "s"} photo${images.length === 1 ? "" : "s"} sélectionnée${images.length === 1 ? "" : "s"}` : "Déposer des photos ou appuyer pour choisir"}</span>
         <span className="text-xs text-muted">{values.imageUrls?.length ? "Choisir de nouvelles photos remplace la galerie actuelle" : "Jusqu'à 8 photos · JPEG, PNG ou WebP · 8 Mo max chacune"}</span>
         <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectImages(event.target.files)} />
       </label>
-      {values.imageUrls?.length > 0 && !images.length && <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{values.imageUrls.map((url) => <img key={url} src={url} alt={`Photo de ${values.name}`} className="h-24 w-full rounded-xl object-cover" />)}</div>}
+      {values.imageUrls?.length > 0 && !images.length && <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{values.imageUrls.map((url) => <img key={url} src={url} alt={`Photo de ${values.name}`} loading="lazy" className="h-24 w-full rounded-xl object-cover" />)}</div>}
       {error && <p role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-3 text-sm text-rose-200">{error}</p>}
       <Button type="submit" icon={Save} disabled={saving}>{saving ? "Enregistrement…" : place ? "Enregistrer les modifications" : "Ajouter l'adresse"}</Button>
     </form>

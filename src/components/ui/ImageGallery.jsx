@@ -23,7 +23,7 @@ function Lightbox({ images, initialIndex, onClose, label }) {
       <button type="button" onClick={onClose} aria-label="Fermer la galerie" className="absolute right-4 top-4 z-10 rounded-full border border-white/15 bg-black/50 p-3 text-white hover:bg-white/15"><X size={22} /></button>
       {hasMultiple && <button type="button" onClick={(event) => { event.stopPropagation(); previous(); }} aria-label="Photo précédente" className="absolute left-3 z-10 rounded-full border border-white/15 bg-black/50 p-3 text-white hover:bg-white/15 sm:left-6"><ChevronLeft size={24} /></button>}
       <figure className="flex max-h-full max-w-full flex-col items-center gap-3" onClick={(event) => event.stopPropagation()}>
-        <img src={images[index]} alt={`${label} · photo ${index + 1} sur ${images.length}`} className="max-h-[78dvh] max-w-[90vw] rounded-xl object-contain shadow-2xl" />
+        <img src={images[index]} alt={`${label} · photo ${index + 1} sur ${images.length}`} loading="lazy" className="max-h-[78dvh] max-w-[90vw] rounded-xl object-cover shadow-2xl" />
         <figcaption className="text-sm text-slate-300">{label} · {index + 1} / {images.length}</figcaption>
       </figure>
       {hasMultiple && <button type="button" onClick={(event) => { event.stopPropagation(); next(); }} aria-label="Photo suivante" className="absolute right-3 z-10 rounded-full border border-white/15 bg-black/50 p-3 text-white hover:bg-white/15 sm:right-6"><ChevronRight size={24} /></button>}

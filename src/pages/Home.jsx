@@ -4,6 +4,7 @@ import { ArrowRight, Plane, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trip } from "../data/itineraryData";
 import dublinSkyline from "../assets/dublin-skyline.svg";
+import hotelImage from "../assets/DUBSTGREFL-chambre-deluxe-superieure-riu-plaza-the-gresham-dublin-sejour-a-dublin-tui.png";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import SectionHeading from "../components/ui/SectionHeading";
@@ -29,13 +30,13 @@ function useCountdown(targetDate) {
 
 function FlightCard({ label, time, date, detail, icon: Icon }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.035] p-4">
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-mint/[0.09] text-mint"><Icon size={19} /></span>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs text-muted">{label} · {date}</p>
+    <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-2xl border border-white/[0.07] bg-white/[0.035] p-4">
+      <span className="grid h-11 w-11 place-items-center rounded-2xl bg-mint/[0.09] text-mint"><Icon size={19} /></span>
+      <div className="min-w-0">
+        <p className="text-xs leading-4 text-muted">{label} · {date}</p>
         <p className="mt-0.5 text-lg font-semibold text-white">{time}</p>
+        <p className="text-xs leading-4 text-slate-400">{detail}</p>
       </div>
-      <span className="max-w-24 text-right text-xs leading-5 text-slate-400">{detail}</span>
     </div>
   );
 }
@@ -52,16 +53,16 @@ export default function Home() {
         <div className="relative z-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
           <div>
             <Badge tone="mint" icon={Sparkles}>{trip.datesLabel}</Badge>
-            <p className="mt-7 text-sm font-medium uppercase tracking-[0.24em] text-mint">L'Irlande nous appelle</p>
+            <p className="mt-7 text-sm font-medium uppercase tracking-[0.24em] text-mint">Escapade irlandaise</p>
             <h1 className="mt-3 max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-6xl">
-              Dublin,<br /><span className="text-mint">avec ma sœur, Enola.</span>
+              Enola & Evan,<br /><span className="text-mint">à Dublin.</span>
             </h1>
             <p className="mt-5 max-w-lg text-sm leading-7 text-slate-300 sm:text-base">
-              Quatre jours de belles histoires, de bons petits plats et de musique au coin du feu. Votre petite boussole pour profiter de Dublin.
+              Quatre jours de découvertes, de bonnes adresses et de musique au coin du feu. Le carnet partagé pour explorer Dublin.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Button href="/visites" icon={ArrowRight}>Explorer le carnet</Button>
-              <Link to="/food" className="inline-flex min-h-11 items-center rounded-2xl border border-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/[0.07]">Nos bonnes adresses</Link>
+              <Link to="/food" className="inline-flex min-h-11 items-center rounded-2xl border border-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/[0.07]">Bonnes adresses</Link>
             </div>
           </div>
           <div className="rounded-3xl border border-white/10 bg-ink/50 p-5 shadow-glow backdrop-blur-xl sm:p-6">
@@ -93,13 +94,15 @@ export default function Home() {
       <section>
         <SectionHeading eyebrow="Le point de chute" title="Bienvenue à Dublin" description={trip.hotel.description} />
         <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
-          <div className="glass-card flex flex-col justify-between gap-5 rounded-3xl p-5 sm:flex-row sm:items-center sm:p-6">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted">Votre hôtel</p>
-              <h3 className="mt-2 text-xl font-semibold text-white">{trip.hotel.name}</h3>
-              <p className="mt-2 text-sm text-slate-400">{trip.hotel.address}</p>
+          <div className="group relative isolate flex min-h-[19rem] overflow-hidden rounded-3xl border border-white/10 bg-cover bg-center shadow-glow sm:min-h-[23rem]" style={{ backgroundImage: `url("${hotelImage}")` }}>
+            <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/5 via-black/10 to-black/80" aria-hidden="true" />
+            <div className="relative z-10 mt-auto w-full bg-black/50 p-5 backdrop-blur-md sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.17em] text-mint">{trip.datesLabel} · Hébergement partagé</p>
+              <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">{trip.hotel.name}</h3>
+              <p className="mt-2 text-sm text-slate-200">{trip.hotel.address}</p>
+              <p className="mt-2 text-xs leading-5 text-slate-300">Point de départ idéal, à proximité des principales adresses du centre-ville.</p>
+              <Button className="mt-4" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(trip.hotel.name)}`} icon={ArrowRight} variant="secondary" target="_blank" rel="noreferrer">Voir l’itinéraire</Button>
             </div>
-            <Button href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(trip.hotel.name)}`} icon={ArrowRight} variant="secondary" target="_blank" rel="noreferrer">Voir sur la carte</Button>
           </div>
           <WeatherWidget />
         </div>

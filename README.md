@@ -46,13 +46,13 @@ npm run build
 
 6. Redémarrez `npm run dev`, connectez-vous à `/admin`, puis choisissez **Importer les cartes de la V1**. Cet import n'écrase pas les lieux déjà présents. Vous pouvez ensuite ajouter, modifier et supprimer les visites, restaurants et pubs, et programmer les visites du 20 au 23 octobre.
 
-La connexion est limitée aux lignes de `trip_admins` par RLS. Tous les navigateurs peuvent lire les adresses et les visites explicitement ajoutées au programme ; seuls Enola et Evan peuvent les modifier. Les photos des lieux et du journal sont stockées dans Storage ; leurs téléversements multiples sont réencodés en JPEG optimisé pour retirer les métadonnées EXIF de localisation. Chaque galerie peut contenir jusqu'à huit images.
+L'accès aux tables applicatives est limité par RLS : seule la lecture de `family_updates` est publique. Les autres tables ne sont accessibles qu'aux comptes administrateurs enregistrés dans `trip_admins` (Evan et Enola). Les pages publiques des lieux utilisent le carnet statique local ; le programme détaillé et la localisation ne sont pas exposés aux proches. Les objets des buckets `place-covers` et `family-updates` sont, eux, publiquement lisibles pour l'affichage des galeries : ne pas y placer d'image privée. Les téléversements multiples sont réencodés en JPEG optimisé pour retirer les métadonnées EXIF de localisation. Chaque galerie peut contenir jusqu'à huit images.
 
 ## 3. Documents et mode hors ligne
 
-`/documents` demande une session administrateur. Les quatre emplacements Enola/Evan et l'upload libre acceptent les fichiers PDF, JPEG, PNG et WebP (15 Mo maximum). Les documents résident dans un bucket privé : téléchargement temporaire signé, aperçu intégré et suppression sont réservés aux administrateurs. Aucun document de voyage n'est publié dans l'espace famille.
+`/documents` demande une session administrateur. Les quatre emplacements Evan/Enola et l'upload libre acceptent les fichiers PDF, JPEG, PNG et WebP (15 Mo maximum). Les documents résident dans un bucket privé : téléchargement temporaire signé, aperçu intégré et suppression sont réservés aux administrateurs. Aucun document de voyage n'est publié dans l'espace famille.
 
-Avant le départ, ouvrez le coffre-fort sur chaque téléphone et utilisez **Enregistrer hors ligne / Télécharger** ou **Ouvrir** pour chaque document requis. La copie privée est conservée dans IndexedDB sur cet appareil ; le document peut alors être ouvert dans l'aperçu même sans réseau. L'application n'enregistre pas automatiquement les billets. L'ouverture hors ligne nécessite le même profil de navigateur et la session administrateur conservée sur ce téléphone.
+Les billets importés dans les quatre emplacements prévus sont automatiquement copiés dans IndexedDB sur l'appareil courant. Pour les documents déjà présents, utilisez **Enregistrer hors ligne / Télécharger** ou **Ouvrir** sur chaque appareil avant le départ ; vérifiez que les quatre billets indiquent « Disponible hors ligne ». L'aperçu lit alors le blob local, sans dépendre du réseau ni du cache HTTP. L'accès hors ligne nécessite que la PWA et la session administrateur soient déjà disponibles sur l'appareil. La persistance dépend des quotas et règles d'éviction du navigateur : gardez également une copie des billets dans l'application de fichiers sécurisée de l'appareil.
 
 La PWA précache l'interface et mémorise les photos publiques consultées (couvertures de lieux et photos du journal familial) ainsi que les tuiles de carte déjà chargées. La météo conserve sa dernière réponse et utilise également un cache réseau. Les changements Realtime, la checklist et les nouvelles tuiles cartographiques nécessitent une connexion. Les documents privés restent disponibles hors ligne uniquement après leur enregistrement explicite dans le coffre-fort.
 
@@ -64,9 +64,9 @@ Le tableau de bord récupère la météo actuelle et les prévisions sur sept jo
 
 ## 5. Espace famille, journal et géolocalisation
 
-Envoyez `/family` à vos proches en France. Cette page est publique : toute personne à qui le lien est communiqué peut lire les adresses, le programme, les messages et les photos publiés, ainsi que la position lorsque celle-ci est activée. Depuis l'onglet **Journal Famille** de `/admin`, les administrateurs peuvent publier un message avec une date, une heure et plusieurs photos ; les publications sont classées par ordre chronologique. La bucket `family-updates` est publique afin que les proches puissent consulter les photos sans compte : n'y téléversez aucun document privé.
+Envoyez `/family` à vos proches en France. Cette page est publique : toute personne ayant le lien peut lire les publications et les photos du journal. Depuis l'onglet **Journal Famille** de `/admin`, les administrateurs peuvent publier un message avec une date, une heure et plusieurs photos ; les publications sont classées par ordre chronologique. La bucket `family-updates` est publique afin que les proches puissent consulter les photos sans compte : n'y téléversez aucun document privé. Le programme détaillé et la localisation sont réservés aux comptes voyageurs.
 
-La position est **désactivée par défaut**, et le navigateur ne demande le GPS qu'après le clic explicite sur **Activer et partager ma position**. Les coordonnées sont arrondies au millième de degré (environ 100 m), limitées au temps nécessaire et actualisées en temps réel. Un garde-fou de cinq minutes masque automatiquement la position si le téléphone ferme la PWA sans arrêter le suivi ; le bouton d'arrêt efface immédiatement les coordonnées. Si vous ne souhaitez aucune localisation publique, n'activez pas ce contrôle.
+La position est **désactivée par défaut**, et le navigateur ne demande le GPS qu'après le clic explicite sur **Activer et partager la position**. Les coordonnées sont arrondies au millième de degré (environ 100 m), limitées au temps nécessaire et actualisées en temps réel pour les comptes voyageurs autorisés. Un garde-fou de cinq minutes masque automatiquement la position si le téléphone ferme la PWA sans arrêter le suivi ; le bouton d'arrêt efface immédiatement les coordonnées.
 
 Le suivi fonctionne tant que la page admin reste ouverte et que le système autorise la géolocalisation. iOS/Android peuvent interrompre un onglet placé en arrière-plan ; rouvrir la page admin permet de reprendre le partage. Les visites du programme ne sont affichées qu'après que vous leur avez attribué une date dans `/admin` ; aucun jour n'est inventé à partir du PDF.
 
@@ -83,11 +83,11 @@ Importez le dépôt dans Vercel, puis définissez :
 
 Redéployez après avoir ajouté ou changé une variable. La règle dans [`vercel.json`](./vercel.json) réécrit les routes React (`/admin`, `/documents`, `/checklist`, `/family`, etc.) vers la page de l'application. Dans Supabase Authentication, ajoutez aussi l'URL de production à **Site URL** et **Redirect URLs**. La géolocalisation du navigateur requiert HTTPS (fourni sur Vercel).
 
-## Administration V4
+## Administration V5
 
-Le tableau de bord `/admin` est organisé en quatre onglets : **Lieux & Programme**, **Journal Famille**, **Coffre-fort** et **Checklist**. Les zones photo permettent la sélection multiple ou le glisser-déposer. Dans les pages publiques, les galeries ouvrent une lightbox navigable au clavier (Échap, flèches gauche/droite).
+Le tableau de bord `/admin` est organisé en quatre onglets : **Lieux & Programme**, **Journal Famille**, **Coffre-fort** et **Checklist**. Les zones photo permettent la sélection multiple ou le glisser-déposer. Dans les pages publiques, les galeries ouvrent une lightbox navigable au clavier (Échap, flèches gauche/droite). Les routes de page sont chargées à la demande ; l'interface et les chunks générés sont précachés par le service worker.
 
-## Structure V4
+## Structure V5
 
 ```text
 public/manifest.json

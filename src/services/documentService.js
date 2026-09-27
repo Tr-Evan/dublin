@@ -35,6 +35,11 @@ export async function getOfflineDocuments() {
   return (await database).getAll("offline-documents");
 }
 
+async function requestPersistentStorage() {
+  if (!navigator.storage?.persist) return false;
+  return navigator.storage.persist();
+}
+
 export async function readTravelDocument(document) {
   const db = await database;
   let saved = await db.get("offline-documents", document.id);
@@ -55,13 +60,31 @@ export async function readTravelDocument(document) {
       blob: await response.blob(),
     };
     await db.put("offline-documents", saved);
+    await requestPersistentStorage();
   }
 
   return saved.blob;
 }
 
+export async function saveTravelDocumentOffline(document, file) {
+  validateTravelDocument(file);
+  const savedDocument = {
+    id: document.id,
+    title: document.title,
+    slotKey: document.slot_key ?? document.slotKey ?? null,
+    mimeType: document.mime_type ?? document.mimeType ?? file.type,
+    fileSize: file.size,
+    createdAt: document.created_at ?? document.createdAt ?? new Date().toISOString(),
+    blob: file,
+  };
+
+  await (await database).put("offline-documents", savedDocument);
+  return { document: savedDocument, persistent: await requestPersistentStorage() };
+}
+
 export async function cacheDocumentForOffline(document) {
   const blob = await readTravelDocument(document);
+  const persistent = await requestPersistentStorage();
   const url = URL.createObjectURL(blob);
   const link = window.document.createElement("a");
   link.href = url;
@@ -69,6 +92,7 @@ export async function cacheDocumentForOffline(document) {
   link.rel = "noopener";
   link.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  return persistent;
 }
 
 export async function deleteOfflineDocument(documentId) {

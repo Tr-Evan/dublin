@@ -8,11 +8,6 @@ export async function getSchedule() {
     .order("visit_date")
     .order("sort_order");
   if (error) throw new Error(error.message);
-  try {
-    localStorage.setItem("dublin-v2:family-schedule", JSON.stringify(data ?? []));
-  } catch {
-    // The live response remains available when the browser cannot persist a public itinerary cache.
-  }
   return data ?? [];
 }
 
@@ -31,11 +26,11 @@ export async function getSharedLocation() {
 
 export function getCachedSchedule() {
   try {
-    const cached = localStorage.getItem("dublin-v2:family-schedule");
-    return cached ? JSON.parse(cached) : [];
+    localStorage.removeItem("dublin-v2:family-schedule");
   } catch {
-    return [];
+    // The itinerary is never restored from a local public cache.
   }
+  return [];
 }
 
 export async function setActivityDate(placeId, visitDate) {

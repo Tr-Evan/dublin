@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Archive, Check, CloudDownload, Eye, FileImage, FileText, LoaderCircle, Plus, Trash2, Upload, X } from "lucide-react";
-import { cacheDocumentForOffline, deleteOfflineDocument, deleteTravelDocument, documentSlots, getOfflineDocuments, getTravelDocuments, readTravelDocument, uploadTravelDocument, validateTravelDocument } from "../../services/documentService";
+import { cacheDocumentForOffline, deleteOfflineDocument, deleteTravelDocument, documentSlots, getOfflineDocuments, getTravelDocuments, readTravelDocument, saveTravelDocumentOffline, uploadTravelDocument, validateTravelDocument } from "../../services/documentService";
 import { supabase } from "../../services/supabaseClient";
 import { useAdminAuth } from "../../auth/AdminAuth";
 import Badge from "../ui/Badge";
@@ -20,6 +20,7 @@ export default function DocumentVault() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [offline, setOffline] = useState(false);
+  const [offlineWarning, setOfflineWarning] = useState("");
   const [preview, setPreview] = useState(null);
   const [slotFiles, setSlotFiles] = useState({});
 
@@ -40,6 +41,8 @@ export default function DocumentVault() {
       setOffline(false);
     } catch (loadError) {
       setError(`Impossible de charger le coffre-fort. ${loadError.message}`);
+      setDocuments([]);
+      setOffline(true);
     }
   }, []);
 
@@ -70,6 +73,11 @@ export default function DocumentVault() {
     const onlineIds = new Set(documents.map((document) => document.id));
     return [...documents, ...savedOffline.filter((document) => !onlineIds.has(document.id))];
   }, [documents, savedOffline]);
+  const cachedTicketCount = documentSlots.filter((slot) => {
+    const document = documents.find((item) => item.slot_key === slot.key)
+      ?? savedOffline.find((item) => item.slotKey === slot.key);
+    return document && isCached(document.id, savedOffline);
+  }).length;
 
   async function upload({ file, documentTitle, slotKey }) {
     if (!file) throw new Error("Choisissez un fichier avant de l'importer.");
@@ -83,6 +91,14 @@ export default function DocumentVault() {
     setDocuments((current) => [saved, ...current.filter((item) => item.id !== saved.id && item.slot_key !== slotKey)]);
     setFreeFile(null);
     setTitle("");
+    if (!slotKey) return;
+    try {
+      const { persistent } = await saveTravelDocumentOffline(saved, file);
+      setSavedOffline(await getOfflineDocuments());
+      setOfflineWarning(persistent ? "" : "Le document est enregistré hors ligne, mais le navigateur ne garantit pas sa conservation après un nettoyage du stockage.");
+    } catch (offlineSaveError) {
+      setError(`Document importé, mais sa copie hors ligne n'a pas pu être enregistrée. ${offlineSaveError.message}`);
+    }
   }
 
   async function handleUpload(event, documentTitle, slotKey, busyKey, selectedFile = null) {
@@ -105,9 +121,11 @@ export default function DocumentVault() {
   async function handleDownload(document) {
     setBusy(document.id);
     setError("");
+    setOfflineWarning("");
     try {
-      await cacheDocumentForOffline(document);
+      const persistent = await cacheDocumentForOffline(document);
       setSavedOffline(await getOfflineDocuments());
+      if (!persistent) setOfflineWarning("Le document est enregistré hors ligne, mais le navigateur ne garantit pas sa conservation après un nettoyage du stockage.");
     } catch (downloadError) {
       setError(downloadError.message);
     } finally {
@@ -172,8 +190,14 @@ export default function DocumentVault() {
 
   return (
     <div className="space-y-10">
-      <SectionHeading eyebrow="Privé · réservé aux administrateurs" title="Le coffre-fort" description="Billets, réservations et justificatifs restent privés. Enregistrez les documents importants sur cet appareil avant de partir pour les consulter sans réseau." />
+      <SectionHeading eyebrow="Privé · réservé aux administrateurs" title="Le coffre-fort" description="Billets, réservations et justificatifs restent privés. Enregistrez les documents sur cet appareil avant le départ pour les consulter hors connexion." />
+      <p role="status" className={`rounded-2xl border p-4 text-sm ${cachedTicketCount === documentSlots.length ? "border-mint/20 bg-mint/[0.05] text-mint" : "border-amber-200/15 bg-amber-200/[0.05] text-amber-100"}`}>
+        {cachedTicketCount === documentSlots.length
+          ? "Les quatre billets sont enregistrés sur cet appareil pour un accès hors ligne."
+          : `${cachedTicketCount} billet${cachedTicketCount === 1 ? "" : "s"} sur ${documentSlots.length} enregistré${cachedTicketCount === 1 ? "" : "s"} hors ligne. Enregistrez chaque billet avant d'activer le mode avion.`}
+      </p>
       {offline && <p className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">Hors connexion : seuls les fichiers déjà enregistrés sur cet appareil sont disponibles.</p>}
+      {offlineWarning && <p role="status" className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">{offlineWarning} Conservez aussi une copie dans les fichiers sécurisés de l’appareil.</p>}
       {error && <p role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-4 text-sm text-rose-200">{error}</p>}
 
       <section>
@@ -208,7 +232,7 @@ export default function DocumentVault() {
         <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-white">Documents du voyage</h2><Badge tone="mint">{displayedDocuments.length} fichier{displayedDocuments.length === 1 ? "" : "s"}</Badge></div>
         {displayedDocuments.length
           ? <div className="space-y-3">{displayedDocuments.map(renderDocument)}</div>
-          : <div className="glass-card rounded-3xl p-8 text-center text-sm text-muted">Aucun document pour le moment. Ajoutez vos billets et réservations ci-dessus.</div>}
+          : <div className="glass-card rounded-3xl p-8 text-center text-sm text-muted">Aucun document pour le moment. Ajoutez les billets et réservations ci-dessus.</div>}
       </section>
       {preview && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label={preview.title} onClick={() => { URL.revokeObjectURL(preview.url); setPreview(null); }}>
@@ -238,7 +262,7 @@ function UploadDropzone({ selectedFile, onFile, disabled = false, compact = fals
       }}
     >
       <Upload size={compact ? 16 : 20} className="text-mint" />
-      <span className="max-w-full truncate text-xs font-medium text-slate-200">{selectedFile?.name ?? "Glissez votre fichier ici ou appuyez pour le choisir"}</span>
+      <span className="max-w-full truncate text-xs font-medium text-slate-200">{selectedFile?.name ?? "Déposez un fichier ici ou appuyez pour le choisir"}</span>
       {!compact && <span className="text-[11px] text-muted">{selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(1)} Mo` : "PDF, JPEG, PNG ou WebP · 15 Mo max"}</span>}
       <input className="sr-only" type="file" disabled={disabled} accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(event) => onFile(event.target.files?.[0] ?? null)} />
     </label>

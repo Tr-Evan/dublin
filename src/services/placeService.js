@@ -119,7 +119,7 @@ async function prepareCoverImage(file) {
 export async function uploadPlaceImages(files) {
   if (!supabase) throw new Error("Configurez Supabase avant d'importer une photo.");
   if (!files.length) return [];
-  if (files.length > 8) throw new Error("Vous pouvez importer jusqu'à 8 photos par lieu.");
+  if (files.length > 8) throw new Error("Import limité à 8 photos par lieu.");
   const uploadedPaths = [];
   try {
     for (const file of files) {

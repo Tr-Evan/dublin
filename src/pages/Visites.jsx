@@ -14,7 +14,7 @@ export default function Visites() {
     <div className="space-y-12">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <Badge tone="mint">Culture · histoire · découverte</Badge>
-        <SectionHeading eyebrow="Votre carnet" title="Les incontournables" description="De la Long Room à la Guinness, toutes les visites du séjour et leurs infos pratiques." />
+        <SectionHeading eyebrow="Carnet partagé" title="Les incontournables" description="De la Long Room à la Guinness, les visites du séjour et leurs infos pratiques." />
       </motion.div>
       <section className="grid gap-4 md:grid-cols-2">
         {loading && !places.length && <p className="text-sm text-muted">Chargement des visites…</p>}
@@ -23,7 +23,7 @@ export default function Visites() {
         {places.map((place, index) => <motion.div key={place.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.06 }}><PlaceCard place={place} /></motion.div>)}
       </section>
       <section>
-        <SectionHeading eyebrow="Bouger simplement" title="Dublin sans voiture" description="Les conseils transport depuis O'Connell Street, juste à côté de votre hôtel." />
+        <SectionHeading eyebrow="Bouger simplement" title="Dublin sans voiture" description="Les conseils transport depuis O'Connell Street, à proximité de l’hôtel." />
         <div className="grid gap-3 sm:grid-cols-2">
           {trip.transport.map((item, index) => {
             const Icon = transportIcons[index];
@@ -43,7 +43,7 @@ export default function Visites() {
         </p>
       </section>
       <section>
-        <SectionHeading eyebrow="Avant le départ" title="Les petits essentiels" description="Coupe-vent, adaptateur et réservations : retrouvez la liste complète dans votre checklist." action={<a href="/checklist" className="whitespace-nowrap text-sm font-semibold text-mint hover:text-emerald-200">Préparer la valise →</a>} />
+        <SectionHeading eyebrow="Avant le départ" title="Checklist du duo" description="Coupe-vent, adaptateur et réservations : tous les indispensables d’Enola & Evan." action={<a href="/checklist" className="whitespace-nowrap text-sm font-semibold text-mint hover:text-emerald-200">Voir la checklist →</a>} />
       </section>
     </div>
   );

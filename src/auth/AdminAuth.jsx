@@ -76,7 +76,7 @@ export function AdminAuthProvider({ children }) {
     loading,
     error,
     async signIn(email, password) {
-      if (!supabase) throw new Error("Configurez Supabase avant de vous connecter.");
+      if (!supabase) throw new Error("Configurez Supabase avant la connexion.");
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw new Error(signInError.message);
     },

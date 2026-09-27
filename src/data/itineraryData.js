@@ -1,5 +1,5 @@
 export const trip = {
-  title: "Dublin avec ma sœur · Evan & Enola",
+  title: "Dublin · Enola & Evan",
   startDate: "2026-10-20T18:10:00",
   endDate: "2026-10-23T17:10:00",
   datesLabel: "20 — 23 octobre 2026",
@@ -10,7 +10,7 @@ export const trip = {
   hotel: {
     name: "Riu Plaza The Gresham Dublin",
     address: "O'Connell Street Upper, Dublin 1",
-    description: "Votre camp de base en plein centre, au nord de la Liffey. La plupart des incontournables se rejoignent à pied.",
+    description: "Un camp de base en plein centre, au nord de la Liffey. La plupart des incontournables se rejoignent à pied.",
   },
   weather: {
     low: 8,
@@ -35,7 +35,7 @@ export const trip = {
     },
     {
       name: "Luas",
-      detail: "Validez sur le quai avant de monter et après être descendues. Ligne verte à O'Connell Upper ; ligne rouge à Abbey Street.",
+      detail: "Valider sur le quai avant de monter et en descendant. Ligne verte à O'Connell Upper ; ligne rouge à Abbey Street.",
       fare: "Abbey Street à 5 min",
     },
   ],
