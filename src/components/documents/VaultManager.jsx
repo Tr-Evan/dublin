@@ -37,7 +37,7 @@ export default function VaultManager() {
       }
       if (slotKey) {
         try {
-          const { persistent } = await saveTravelDocumentOffline(saved, file);
+          const { persistent } = await saveTravelDocumentOffline(saved, saved.compressedFile);
           vault.setOfflineWarning(persistent ? "" : "Document importé, mais le navigateur ne garantit pas sa conservation hors ligne après un nettoyage du stockage.");
         } catch (offlineError) {
           vault.setError(`Document importé, mais sa copie hors ligne n'a pas pu être enregistrée : ${offlineError.message}`);
@@ -88,7 +88,8 @@ export default function VaultManager() {
 
   return (
     <div className="space-y-8">
-      <SectionHeading eyebrow="Administration · privé" title="Gestion du coffre-fort" description="Ajoutez, remplacez ou supprimez les billets et documents privés du voyage." />
+      <SectionHeading eyebrow="Administration · privé" title="Gestion du coffre-fort" description="Ajoutez, remplacez ou supprimez les images des billets et documents privés du voyage." />
+      <p className="rounded-2xl border border-mint/15 bg-mint/[0.04] p-4 text-sm leading-6 text-slate-300">Images JPEG, PNG ou WebP uniquement · 25 Mo maximum par image. Elles sont compressées avant l'envoi (300 Ko max). Astuce : faites une capture d'écran de vos billets PDF.</p>
       {vault.offline && <p role="status" className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">Hors connexion : les documents enregistrés sur cet appareil restent consultables, mais les imports et suppressions sont désactivés.</p>}
       {vault.offlineWarning && <p role="status" className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">{vault.offlineWarning}</p>}
       {vault.error && <p role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-4 text-sm text-rose-200">{vault.error}</p>}

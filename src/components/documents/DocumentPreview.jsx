@@ -9,9 +9,7 @@ export default function DocumentPreview({ preview, onClose }) {
           <h2 className="truncate font-semibold text-white">{preview.title}</h2>
           <button type="button" aria-label="Fermer l'aperçu" onClick={onClose} className="rounded-xl border border-white/10 p-2 text-slate-300 hover:text-white"><X size={18} /></button>
         </div>
-        {preview.type === "application/pdf"
-          ? <iframe title={preview.title} src={preview.url} className="min-h-0 flex-1 bg-white" />
-          : <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4"><img src={preview.url} alt={preview.title} className="max-h-full max-w-full rounded-xl object-contain" /></div>}
+        <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4"><img src={preview.url} alt={preview.title} className="max-h-full max-w-full rounded-xl object-contain shadow-2xl" /></div>
       </div>
     </div>
   );

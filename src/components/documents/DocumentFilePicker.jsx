@@ -25,7 +25,7 @@ export default function DocumentFilePicker({ selectedFile, onFile, disabled = fa
         size: file.size,
         error: validationError.message,
       });
-      setError("Format non supporté ou fichier trop lourd. Formats acceptés : PDF, JPEG, PNG ou WebP (15 Mo max).");
+      setError("Format non supporté ou fichier trop lourd. Choisissez une image JPEG, PNG ou WebP de 25 Mo maximum.");
       onFile(null);
     }
   }
@@ -44,12 +44,13 @@ export default function DocumentFilePicker({ selectedFile, onFile, disabled = fa
       >
         <Upload size={compact ? 16 : 20} className="text-mint" />
         <span className="max-w-full truncate text-xs font-medium text-slate-200">{selectedFile?.name ?? "Déposez un fichier ici ou appuyez pour le choisir"}</span>
-        {!compact && <span className="text-[11px] text-muted">{selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(1)} Mo` : "PDF, JPEG, PNG ou WebP · 15 Mo max"}</span>}
+        {!compact && <span className="text-[11px] text-muted">{selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(1)} Mo` : "Image JPEG, PNG ou WebP · 25 Mo max"}</span>}
+        {!compact && <span className="text-[11px] text-mint/80">Astuce : Faites une capture d'écran de vos billets PDF.</span>}
         <input
           className="sr-only"
           type="file"
           disabled={disabled}
-          accept="image/*,.pdf,application/pdf"
+          accept="image/*"
           onChange={(event) => {
             acceptFile(event.currentTarget.files?.item(0) ?? null);
             event.currentTarget.value = "";

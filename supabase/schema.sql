@@ -93,7 +93,7 @@ create table if not exists public.travel_documents (
     )
   ),
   file_path text not null unique,
-  mime_type text not null check (mime_type in ('application/pdf', 'image/jpeg', 'image/png', 'image/webp')),
+  mime_type text not null check (mime_type in ('image/jpeg', 'image/png', 'image/webp')),
   file_size bigint not null check (file_size between 1 and 15728640),
   created_by uuid not null references auth.users (id),
   created_at timestamptz not null default now()
@@ -285,7 +285,7 @@ grant select on public.family_updates to anon;
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values
   ('place-covers', 'place-covers', true, 8388608, array['image/jpeg', 'image/png', 'image/webp']),
-  ('travel-documents', 'travel-documents', false, 15728640, array['application/pdf', 'image/jpeg', 'image/png', 'image/webp']),
+  ('travel-documents', 'travel-documents', false, 15728640, array['image/jpeg', 'image/png', 'image/webp']),
   ('family-updates', 'family-updates', true, 5242880, array['image/jpeg'])
 on conflict (id) do update set
   public = excluded.public,
