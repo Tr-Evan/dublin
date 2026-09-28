@@ -150,7 +150,7 @@ export default function Home() {
         <SectionHeading eyebrow="Le point de chute" title="Bienvenue à Dublin" description={trip.hotel.description} />
         <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
           <div className="space-y-3">
-            <article className="relative isolate h-[300px] overflow-hidden rounded-3xl border border-white/10 shadow-glow sm:h-[340px]">
+            <article className="relative isolate h-[300px] overflow-hidden rounded-3xl border border-white/10 shadow-glow sm:h-[340px] md:h-full">
               <img src={hotelImage} alt="Riu Plaza The Gresham Dublin" className="absolute inset-0 h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" aria-hidden="true" />
               <div
