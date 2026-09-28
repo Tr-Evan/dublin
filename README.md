@@ -50,7 +50,7 @@ L'accès aux tables applicatives est limité par RLS : seule la lecture de `fami
 
 ## 3. Documents et mode hors ligne
 
-`/documents` demande une session administrateur. Les quatre emplacements Evan/Enola et l'upload libre acceptent les fichiers PDF, JPEG, PNG et WebP (15 Mo maximum). Les documents résident dans un bucket privé : téléchargement temporaire signé, aperçu intégré et suppression sont réservés aux administrateurs. Aucun document de voyage n'est publié dans l'espace famille.
+`/documents` demande une session administrateur et fournit une consultation en lecture seule des documents privés. L'ajout, le remplacement et la suppression sont disponibles uniquement dans l'onglet **Coffre-fort** de `/admin`. Les quatre emplacements Evan/Enola et l'upload libre acceptent les fichiers PDF, JPEG, PNG et WebP (15 Mo maximum) ; la sélection vérifie aussi l'extension quand le navigateur mobile ne renseigne pas le type MIME. Les documents résident dans un bucket privé et aucun document de voyage n'est publié dans l'espace famille.
 
 Les billets importés dans les quatre emplacements prévus sont automatiquement copiés dans IndexedDB sur l'appareil courant. Pour les documents déjà présents, utilisez **Enregistrer hors ligne / Télécharger** ou **Ouvrir** sur chaque appareil avant le départ ; vérifiez que les quatre billets indiquent « Disponible hors ligne ». L'aperçu lit alors le blob local, sans dépendre du réseau ni du cache HTTP. L'accès hors ligne nécessite que la PWA et la session administrateur soient déjà disponibles sur l'appareil. La persistance dépend des quotas et règles d'éviction du navigateur : gardez également une copie des billets dans l'application de fichiers sécurisée de l'appareil.
 

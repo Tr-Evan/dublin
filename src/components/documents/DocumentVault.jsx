@@ -1,270 +1,33 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Archive, Check, CloudDownload, Eye, FileImage, FileText, LoaderCircle, Plus, Trash2, Upload, X } from "lucide-react";
-import { cacheDocumentForOffline, deleteOfflineDocument, deleteTravelDocument, documentSlots, getOfflineDocuments, getTravelDocuments, readTravelDocument, saveTravelDocumentOffline, uploadTravelDocument, validateTravelDocument } from "../../services/documentService";
-import { supabase } from "../../services/supabaseClient";
-import { useAdminAuth } from "../../auth/AdminAuth";
+import { Archive } from "lucide-react";
 import Badge from "../ui/Badge";
-import Button from "../ui/Button";
 import SectionHeading from "../ui/SectionHeading";
-
-function isCached(id, saved) {
-  return saved.some((document) => document.id === id);
-}
+import DocumentPreview from "./DocumentPreview";
+import VaultDocumentList from "./VaultDocumentList";
+import useVaultDocuments from "./useVaultDocuments";
 
 export default function DocumentVault() {
-  const { session } = useAdminAuth();
-  const [documents, setDocuments] = useState([]);
-  const [savedOffline, setSavedOffline] = useState([]);
-  const [title, setTitle] = useState("");
-  const [freeFile, setFreeFile] = useState(null);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState("");
-  const [offline, setOffline] = useState(false);
-  const [offlineWarning, setOfflineWarning] = useState("");
-  const [preview, setPreview] = useState(null);
-  const [slotFiles, setSlotFiles] = useState({});
-
-  const refresh = useCallback(async () => {
-    try {
-      setSavedOffline(await getOfflineDocuments());
-    } catch (storageError) {
-      setError(`Impossible de lire les fichiers enregistrés sur cet appareil : ${storageError.message}`);
-      return;
-    }
-    if (!supabase || navigator.onLine === false) {
-      setDocuments([]);
-      setOffline(true);
-      return;
-    }
-    try {
-      setDocuments(await getTravelDocuments());
-      setOffline(false);
-    } catch (loadError) {
-      setError(`Impossible de charger le coffre-fort. ${loadError.message}`);
-      setDocuments([]);
-      setOffline(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-    const handleNetworkChange = () => void refresh();
-    window.addEventListener("online", handleNetworkChange);
-    window.addEventListener("offline", handleNetworkChange);
-    if (!supabase) return () => {
-      window.removeEventListener("online", handleNetworkChange);
-      window.removeEventListener("offline", handleNetworkChange);
-    };
-    const channel = supabase.channel("travel-documents")
-      .on("postgres_changes", { event: "*", schema: "public", table: "travel_documents" }, () => void refresh())
-      .subscribe();
-    return () => {
-      window.removeEventListener("online", handleNetworkChange);
-      window.removeEventListener("offline", handleNetworkChange);
-      void supabase.removeChannel(channel);
-    };
-  }, [refresh]);
-
-  useEffect(() => () => {
-    if (preview?.url) URL.revokeObjectURL(preview.url);
-  }, [preview]);
-
-  const displayedDocuments = useMemo(() => {
-    const onlineIds = new Set(documents.map((document) => document.id));
-    return [...documents, ...savedOffline.filter((document) => !onlineIds.has(document.id))];
-  }, [documents, savedOffline]);
-  const cachedTicketCount = documentSlots.filter((slot) => {
-    const document = documents.find((item) => item.slot_key === slot.key)
-      ?? savedOffline.find((item) => item.slotKey === slot.key);
-    return document && isCached(document.id, savedOffline);
-  }).length;
-
-  async function upload({ file, documentTitle, slotKey }) {
-    if (!file) throw new Error("Choisissez un fichier avant de l'importer.");
-    validateTravelDocument(file);
-    const saved = await uploadTravelDocument({ file, title: documentTitle, slotKey, userId: session.user.id });
-    if (slotKey) {
-      const oldOfflineFiles = (await getOfflineDocuments()).filter((document) => document.slotKey === slotKey && document.id !== saved.id);
-      for (const oldFile of oldOfflineFiles) await deleteOfflineDocument(oldFile.id);
-      setSavedOffline(await getOfflineDocuments());
-    }
-    setDocuments((current) => [saved, ...current.filter((item) => item.id !== saved.id && item.slot_key !== slotKey)]);
-    setFreeFile(null);
-    setTitle("");
-    if (!slotKey) return;
-    try {
-      const { persistent } = await saveTravelDocumentOffline(saved, file);
-      setSavedOffline(await getOfflineDocuments());
-      setOfflineWarning(persistent ? "" : "Le document est enregistré hors ligne, mais le navigateur ne garantit pas sa conservation après un nettoyage du stockage.");
-    } catch (offlineSaveError) {
-      setError(`Document importé, mais sa copie hors ligne n'a pas pu être enregistrée. ${offlineSaveError.message}`);
-    }
-  }
-
-  async function handleUpload(event, documentTitle, slotKey, busyKey, selectedFile = null) {
-    event?.preventDefault();
-    const form = event?.currentTarget;
-    const file = selectedFile ?? form?.querySelector('input[type="file"]')?.files?.[0];
-    setBusy(busyKey);
-    setError("");
-    try {
-      await upload({ file, documentTitle, slotKey });
-      if (form) form.reset();
-      if (slotKey) setSlotFiles((current) => ({ ...current, [slotKey]: null }));
-    } catch (uploadError) {
-      setError(uploadError.message);
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function handleDownload(document) {
-    setBusy(document.id);
-    setError("");
-    setOfflineWarning("");
-    try {
-      const persistent = await cacheDocumentForOffline(document);
-      setSavedOffline(await getOfflineDocuments());
-      if (!persistent) setOfflineWarning("Le document est enregistré hors ligne, mais le navigateur ne garantit pas sa conservation après un nettoyage du stockage.");
-    } catch (downloadError) {
-      setError(downloadError.message);
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function handlePreview(document) {
-    setBusy(document.id);
-    setError("");
-    try {
-      const blob = await readTravelDocument(document);
-      const url = URL.createObjectURL(blob);
-      setPreview({ title: document.title, url, type: document.mime_type ?? document.mimeType });
-      setSavedOffline(await getOfflineDocuments());
-    } catch (previewError) {
-      setError(`Impossible d'ouvrir le document. ${previewError.message}`);
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function handleDelete(document) {
-    if (!window.confirm(`Supprimer « ${document.title} » du coffre-fort ?`)) return;
-    setBusy(document.id);
-    setError("");
-    try {
-      if (documents.some((item) => item.id === document.id)) await deleteTravelDocument(document);
-      else {
-        await deleteOfflineDocument(document.id);
-      }
-      setDocuments((current) => current.filter((item) => item.id !== document.id));
-      setSavedOffline(await getOfflineDocuments());
-    } catch (deleteError) {
-      setError(deleteError.message);
-    } finally {
-      setBusy("");
-    }
-  }
-
-  function renderDocument(document) {
-    const cached = isCached(document.id, savedOffline);
-    const Icon = document.mime_type?.startsWith("image/") || document.mimeType?.startsWith("image/") ? FileImage : FileText;
-    return (
-      <div key={document.id} className="flex flex-col gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 sm:flex-row sm:items-center">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-mint/[0.08] text-mint"><Icon size={19} /></span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-white">{document.title}</p>
-          <p className="mt-1 text-xs text-muted">{document.file_size ? `${(document.file_size / 1024 / 1024).toFixed(1)} Mo` : `${(document.blob.size / 1024 / 1024).toFixed(1)} Mo`}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {cached && <Badge tone="mint" icon={Check}>Disponible hors ligne</Badge>}
-          <button type="button" onClick={() => void handleDownload(document)} disabled={busy === document.id} aria-label={cached ? `Télécharger ${document.title}` : `Enregistrer ${document.title} hors ligne`} title={cached ? "Retélécharger" : "Enregistrer et télécharger pour le mode hors ligne"} className="rounded-xl border border-white/10 p-2.5 text-slate-300 transition hover:bg-white/[0.06] hover:text-mint disabled:opacity-50">
-            {busy === document.id ? <LoaderCircle size={17} className="animate-spin" /> : <CloudDownload size={17} />}
-          </button>
-          <button type="button" onClick={() => void handlePreview(document)} disabled={busy === document.id} aria-label={`Ouvrir ${document.title}`} title="Ouvrir le document" className="rounded-xl border border-white/10 p-2.5 text-slate-300 transition hover:bg-white/[0.06] hover:text-mint disabled:opacity-50"><Eye size={17} /></button>
-          <button type="button" onClick={() => void handleDelete(document)} disabled={busy === document.id} aria-label={`Supprimer ${document.title}`} className="rounded-xl border border-white/10 p-2.5 text-slate-400 transition hover:bg-rose-400/10 hover:text-rose-200 disabled:opacity-50"><Trash2 size={17} /></button>
-        </div>
-      </div>
-    );
-  }
+  const vault = useVaultDocuments();
 
   return (
-    <div className="space-y-10">
-      <SectionHeading eyebrow="Privé · réservé aux administrateurs" title="Le coffre-fort" description="Billets, réservations et justificatifs restent privés. Enregistrez les documents sur cet appareil avant le départ pour les consulter hors connexion." />
-      <p role="status" className={`rounded-2xl border p-4 text-sm ${cachedTicketCount === documentSlots.length ? "border-mint/20 bg-mint/[0.05] text-mint" : "border-amber-200/15 bg-amber-200/[0.05] text-amber-100"}`}>
-        {cachedTicketCount === documentSlots.length
+    <div className="space-y-8">
+      <SectionHeading eyebrow="Privé · lecture seule" title="Le coffre-fort" description="Consultez vos billets et réservations. Enregistrez chaque document sur cet appareil avant le départ pour le retrouver hors connexion." />
+      <p role="status" className={`rounded-2xl border p-4 text-sm ${vault.cachedTicketCount === 4 ? "border-mint/20 bg-mint/[0.05] text-mint" : "border-amber-200/15 bg-amber-200/[0.05] text-amber-100"}`}>
+        {vault.cachedTicketCount === 4
           ? "Les quatre billets sont enregistrés sur cet appareil pour un accès hors ligne."
-          : `${cachedTicketCount} billet${cachedTicketCount === 1 ? "" : "s"} sur ${documentSlots.length} enregistré${cachedTicketCount === 1 ? "" : "s"} hors ligne. Enregistrez chaque billet avant d'activer le mode avion.`}
+          : `${vault.cachedTicketCount} billet${vault.cachedTicketCount === 1 ? "" : "s"} sur 4 enregistré${vault.cachedTicketCount === 1 ? "" : "s"} hors ligne. Enregistrez chaque billet avant d'activer le mode avion.`}
       </p>
-      {offline && <p className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">Hors connexion : seuls les fichiers déjà enregistrés sur cet appareil sont disponibles.</p>}
-      {offlineWarning && <p role="status" className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">{offlineWarning} Conservez aussi une copie dans les fichiers sécurisés de l’appareil.</p>}
-      {error && <p role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-4 text-sm text-rose-200">{error}</p>}
+      {vault.offline && <p className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">Hors connexion : seuls les fichiers déjà enregistrés sur cet appareil sont disponibles.</p>}
+      {vault.offlineWarning && <p role="status" className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">{vault.offlineWarning} Conservez aussi une copie dans les fichiers sécurisés de l’appareil.</p>}
+      {vault.error && <p role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-4 text-sm text-rose-200">{vault.error}</p>}
 
       <section>
-        <div className="mb-4 flex items-center gap-3"><Archive size={19} className="text-mint" /><h2 className="text-lg font-semibold text-white">Billets d'avion</h2></div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {documentSlots.map((slot) => {
-            const existing = documents.find((document) => document.slot_key === slot.key)
-              ?? savedOffline.find((document) => document.slotKey === slot.key);
-            return (
-              <form key={slot.key} onSubmit={(event) => void handleUpload(event, slot.title, slot.key, slot.key)} className="glass-card rounded-3xl p-4">
-                <h3 className="mb-3 text-sm font-semibold text-white">{slot.title}</h3>
-                {existing ? renderDocument(existing) : <UploadDropzone selectedFile={slotFiles[slot.key]} disabled={offline} onFile={(file) => setSlotFiles((current) => ({ ...current, [slot.key]: file }))} />}
-                {existing
-                  ? <UploadDropzone compact selectedFile={slotFiles[slot.key]} disabled={offline || busy === slot.key} onFile={(file) => { setSlotFiles((current) => ({ ...current, [slot.key]: file })); void handleUpload(null, slot.title, slot.key, slot.key, file); }} />
-                  : <Button type="button" icon={busy === slot.key ? LoaderCircle : Upload} variant="secondary" className="mt-3 w-full" disabled={offline || busy === slot.key || !slotFiles[slot.key]} onClick={() => void handleUpload(null, slot.title, slot.key, slot.key, slotFiles[slot.key])}>{busy === slot.key ? "Importation…" : "Importer le billet"}</Button>}
-              </form>
-            );
-          })}
-        </div>
+        <div className="mb-4 flex items-center gap-3"><Archive size={19} className="text-mint" /><h2 className="text-lg font-semibold text-white">Documents du voyage</h2><Badge tone="mint">{vault.displayedDocuments.length} fichier{vault.displayedDocuments.length === 1 ? "" : "s"}</Badge></div>
+        {vault.displayedDocuments.length
+          ? <VaultDocumentList documents={vault.displayedDocuments} savedOffline={vault.savedOffline} busy={vault.busy} onDownload={vault.handleDownload} onPreview={vault.handlePreview} />
+          : <div className="glass-card rounded-3xl p-8 text-center text-sm text-muted">Aucun document n'est encore disponible.</div>}
       </section>
 
-      <section>
-        <div className="mb-4 flex items-center gap-3"><Plus size={19} className="text-mint" /><h2 className="text-lg font-semibold text-white">Autres documents</h2></div>
-        <form onSubmit={(event) => void handleUpload(event, title, null, "free")} className="glass-card grid gap-3 rounded-3xl p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <label className="text-xs font-medium text-slate-300">Nom du document<input required maxLength={120} value={title} disabled={offline} onChange={(event) => setTitle(event.target.value)} placeholder="Réservation Trinity College" className="mt-2 min-h-11 w-full rounded-xl border border-white/10 bg-ink/80 px-3 text-sm text-white outline-none focus:border-mint/40" /></label>
-          <UploadDropzone selectedFile={freeFile} disabled={offline || busy === "free"} onFile={setFreeFile} />
-          <Button type="submit" icon={busy === "free" ? LoaderCircle : Upload} disabled={offline || busy === "free" || !freeFile}>{busy === "free" ? "Importation…" : "Importer"}</Button>
-        </form>
-      </section>
-
-      <section>
-        <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-white">Documents du voyage</h2><Badge tone="mint">{displayedDocuments.length} fichier{displayedDocuments.length === 1 ? "" : "s"}</Badge></div>
-        {displayedDocuments.length
-          ? <div className="space-y-3">{displayedDocuments.map(renderDocument)}</div>
-          : <div className="glass-card rounded-3xl p-8 text-center text-sm text-muted">Aucun document pour le moment. Ajoutez les billets et réservations ci-dessus.</div>}
-      </section>
-      {preview && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label={preview.title} onClick={() => { URL.revokeObjectURL(preview.url); setPreview(null); }}>
-          <div className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-panel" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] p-4"><h2 className="truncate font-semibold text-white">{preview.title}</h2><button type="button" aria-label="Fermer l'aperçu" onClick={() => { URL.revokeObjectURL(preview.url); setPreview(null); }} className="rounded-xl border border-white/10 p-2 text-slate-300 hover:text-white"><X size={18} /></button></div>
-            {preview.type === "application/pdf"
-              ? <iframe title={preview.title} src={preview.url} className="min-h-0 flex-1 bg-white" />
-              : <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4"><img src={preview.url} alt={preview.title} className="max-h-full max-w-full rounded-xl object-contain" /></div>}
-          </div>
-        </div>
-      )}
+      <DocumentPreview preview={vault.preview} onClose={vault.closePreview} />
     </div>
-  );
-}
-
-function UploadDropzone({ selectedFile, onFile, disabled = false, compact = false }) {
-  const [dragging, setDragging] = useState(false);
-  return (
-    <label
-      className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed text-center transition ${compact ? "mt-3 min-h-16 px-3 py-2" : "min-h-28 p-4"} ${dragging ? "border-mint bg-mint/[0.08]" : "border-white/20 bg-white/[0.025] hover:border-mint/45"} ${disabled ? "pointer-events-none opacity-50" : ""}`}
-      onDragOver={(event) => { event.preventDefault(); if (!disabled) setDragging(true); }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={(event) => {
-        event.preventDefault();
-        setDragging(false);
-        if (!disabled) onFile(event.dataTransfer.files?.[0] ?? null);
-      }}
-    >
-      <Upload size={compact ? 16 : 20} className="text-mint" />
-      <span className="max-w-full truncate text-xs font-medium text-slate-200">{selectedFile?.name ?? "Déposez un fichier ici ou appuyez pour le choisir"}</span>
-      {!compact && <span className="text-[11px] text-muted">{selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(1)} Mo` : "PDF, JPEG, PNG ou WebP · 15 Mo max"}</span>}
-      <input className="sr-only" type="file" disabled={disabled} accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(event) => onFile(event.target.files?.[0] ?? null)} />
-    </label>
   );
 }

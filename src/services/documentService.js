@@ -3,6 +3,7 @@ import { supabase } from "./supabaseClient";
 
 const bucket = "travel-documents";
 const allowedTypes = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
+const allowedExtensions = new Set(["pdf", "jpg", "jpeg", "png", "webp"]);
 const maxFileSize = 15 * 1024 * 1024;
 const database = openDB("dublin-travel-documents", 1, {
   upgrade(db) {
@@ -18,10 +19,27 @@ export const documentSlots = [
 ];
 
 export function validateTravelDocument(file) {
-  if (!allowedTypes.has(file.type)) {
+  const extension = file.name?.split(".").pop()?.toLowerCase();
+  const supportedExtension = allowedExtensions.has(extension);
+  const supportedType = allowedTypes.has(file.type);
+  const genericMobileType = !file.type || file.type === "application/octet-stream";
+  if (!supportedExtension || (!supportedType && !genericMobileType)) {
     throw new Error("Formats acceptés : PDF, JPEG, PNG ou WebP.");
   }
   if (file.size > maxFileSize) throw new Error("La taille maximale autorisée est de 15 Mo.");
+}
+
+function getTravelDocumentMimeType(file) {
+  if (allowedTypes.has(file.type)) return file.type;
+  const extension = file.name?.split(".").pop()?.toLowerCase();
+  const mimeByExtension = {
+    pdf: "application/pdf",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+  };
+  return mimeByExtension[extension];
 }
 
 export async function getTravelDocuments() {
@@ -68,11 +86,12 @@ export async function readTravelDocument(document) {
 
 export async function saveTravelDocumentOffline(document, file) {
   validateTravelDocument(file);
+  const mimeType = getTravelDocumentMimeType(file);
   const savedDocument = {
     id: document.id,
     title: document.title,
     slotKey: document.slot_key ?? document.slotKey ?? null,
-    mimeType: document.mime_type ?? document.mimeType ?? file.type,
+    mimeType: document.mime_type ?? document.mimeType ?? mimeType,
     fileSize: file.size,
     createdAt: document.created_at ?? document.createdAt ?? new Date().toISOString(),
     blob: file,
@@ -102,6 +121,7 @@ export async function deleteOfflineDocument(documentId) {
 export async function uploadTravelDocument({ file, title, slotKey = null, userId }) {
   if (!supabase) throw new Error("Configurez Supabase avant d'importer des documents.");
   validateTravelDocument(file);
+  const mimeType = getTravelDocumentMimeType(file);
 
   const { data: existing, error: lookupError } = slotKey
     ? await supabase.from("travel_documents").select("file_path").eq("slot_key", slotKey).maybeSingle()
@@ -111,7 +131,7 @@ export async function uploadTravelDocument({ file, title, slotKey = null, userId
   const extension = file.name.split(".").pop()?.replace(/[^a-zA-Z0-9]/g, "") || "file";
   const filePath = `${userId}/${crypto.randomUUID()}.${extension}`;
   const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file, {
-    contentType: file.type,
+    contentType: mimeType,
     upsert: false,
   });
   if (uploadError) throw new Error(uploadError.message);
@@ -120,7 +140,7 @@ export async function uploadTravelDocument({ file, title, slotKey = null, userId
     title: title.trim(),
     slot_key: slotKey,
     file_path: filePath,
-    mime_type: file.type,
+    mime_type: mimeType,
     file_size: file.size,
     created_by: userId,
   };

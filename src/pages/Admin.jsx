@@ -5,7 +5,7 @@ import { useAdminAuth } from "../auth/AdminAuth";
 import { useLocationSharing } from "../auth/LocationSharing";
 import LocationSharingControl from "../components/admin/LocationSharingControl";
 import AdminTimeline from "../components/family/AdminTimeline";
-import DocumentVault from "../components/documents/DocumentVault";
+import VaultManager from "../components/documents/VaultManager";
 import PlaceEditorForm from "../components/admin/PlaceEditorForm";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
@@ -239,7 +239,7 @@ function AdminWorkspace({ auth }) {
       </section>
       </div>}
       {activeTab === "family" && <div id="admin-panel-family" role="tabpanel" aria-labelledby="admin-tab-family" className="pb-24"><AdminTimeline /></div>}
-      {activeTab === "vault" && <section id="admin-panel-vault" role="tabpanel" aria-labelledby="admin-tab-vault" className="glass-card rounded-3xl p-5 sm:p-6"><DocumentVault /></section>}
+      {activeTab === "vault" && <section id="admin-panel-vault" role="tabpanel" aria-labelledby="admin-tab-vault" className="glass-card rounded-3xl p-5 sm:p-6"><VaultManager /></section>}
       {activeTab === "checklist" && <section id="admin-panel-checklist" role="tabpanel" aria-labelledby="admin-tab-checklist" className="glass-card rounded-3xl p-5 sm:p-6"><Checklist /></section>}
     </div>
   );
