@@ -144,11 +144,11 @@ export default function Home() {
         <SectionHeading eyebrow="Le point de chute" title="Bienvenue à Dublin" description={trip.hotel.description} />
         <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
           <div className="space-y-3">
-            <article className="overflow-hidden rounded-3xl shadow-glow md:hidden">
+            <article className="overflow-hidden rounded-3xl border border-white/10 shadow-glow md:hidden">
               <img src={hotelImage} alt="Chambre du Riu Plaza The Gresham Dublin" className="h-52 w-full object-cover sm:h-64" />
               <HotelDetails className="p-5 sm:p-6" />
             </article>
-            <article className="group relative hidden min-h-[23rem] isolate overflow-hidden rounded-3xl border border-white/10 bg-cover bg-center shadow-glow md:flex" style={{ backgroundImage: `url("${hotelImage}")` }}>
+            <article className="group relative hidden min-h-[23rem] isolate overflow-hidden rounded-3xl border-white/10 bg-cover bg-center shadow-glow md:flex" style={{ backgroundImage: `url("${hotelImage}")` }}>
               <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/5 via-black/10 to-black/55" aria-hidden="true" />
               <HotelDetails className="gradient-blur relative z-10 mt-auto w-full p-5 backdrop-blur-md sm:p-6" />
             </article>
