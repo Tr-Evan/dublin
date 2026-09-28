@@ -36,7 +36,7 @@ function AppContent() {
     <div className="min-h-screen bg-ink text-white">
       <Header />
       <BottomNavigation />
-      <main className="mx-auto max-w-7xl px-5 pb-28 pt-8 sm:px-8 sm:pt-10 md:ml-64 md:px-10 md:pb-12 md:pt-12">
+      <main className="mx-auto max-w-7xl px-5 pb-28 pt-8 sm:px-8 sm:pt-10 md:px-10 md:pb-12 md:pt-12">
         <AnimatePresence mode="wait">
           <motion.div key={location.pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22 }}>
             <Suspense fallback={<RouteLoader />}>
@@ -58,7 +58,7 @@ function AppContent() {
           </motion.div>
         </AnimatePresence>
       </main>
-      <footer className="pb-24 text-center text-xs text-muted md:ml-64 md:pb-8">Enola & Evan à Dublin · octobre 2026</footer>
+      <footer className="pb-24 text-center text-xs text-muted md:pb-8">Enola & Evan à Dublin · octobre 2026</footer>
     </div>
   );
 }
