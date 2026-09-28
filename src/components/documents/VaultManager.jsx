@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Archive, FileLock2, LoaderCircle, Plus, Upload } from "lucide-react";
 import { useAdminAuth } from "../../auth/AdminAuth";
 import { cacheDocumentForOffline, deleteOfflineDocument, deleteTravelDocument, documentSlots, getOfflineDocuments, saveTravelDocumentOffline, uploadTravelDocument } from "../../services/documentService";
@@ -17,11 +17,6 @@ export default function VaultManager() {
   const [freeFile, setFreeFile] = useState(null);
   const [slotFiles, setSlotFiles] = useState({});
   const [saving, setSaving] = useState("");
-
-  const otherDocuments = useMemo(() => {
-    const slotKeys = new Set(documentSlots.map((slot) => slot.key));
-    return vault.displayedDocuments.filter((document) => !slotKeys.has(document.slot_key ?? document.slotKey));
-  }, [vault.displayedDocuments]);
 
   async function upload(file, documentTitle, slotKey, busyKey) {
     if (!session?.user?.id) {
@@ -108,7 +103,7 @@ export default function VaultManager() {
             return (
               <div key={slot.key} className="glass-card space-y-3 rounded-3xl p-4">
                 <h3 className="text-sm font-semibold text-white">{slot.title}</h3>
-                {existing && <VaultDocumentList documents={[existing]} savedOffline={vault.savedOffline} busy={vault.busy} onDownload={handleDownload} onPreview={vault.handlePreview} onDelete={handleDelete} />}
+                {existing && <p className="truncate rounded-xl border border-mint/15 bg-mint/[0.04] px-3 py-2 text-xs text-mint">Document actuel : {existing.title}</p>}
                 <DocumentFilePicker selectedFile={selectedFile} disabled={vault.offline || saving === slot.key} onFile={(file) => setSlotFiles((current) => ({ ...current, [slot.key]: file }))} />
                 <Button type="button" icon={saving === slot.key ? LoaderCircle : Upload} variant="secondary" className="w-full" disabled={vault.offline || saving === slot.key || !selectedFile} onClick={() => void upload(selectedFile, slot.title, slot.key, slot.key)}>
                   {saving === slot.key ? "Importation…" : existing ? "Remplacer le billet" : "Importer le billet"}
@@ -129,10 +124,10 @@ export default function VaultManager() {
       </section>
 
       <section>
-        <div className="mb-4 flex items-center justify-between gap-3"><div className="flex items-center gap-2"><FileLock2 size={18} className="text-mint" /><h2 className="text-lg font-semibold text-white">Documents enregistrés</h2></div><Badge tone="mint">{vault.displayedDocuments.length} fichier{vault.displayedDocuments.length === 1 ? "" : "s"}</Badge></div>
-        {otherDocuments.length
-          ? <VaultDocumentList documents={otherDocuments} savedOffline={vault.savedOffline} busy={vault.busy} onDownload={handleDownload} onPreview={vault.handlePreview} onDelete={handleDelete} />
-          : <div className="glass-card rounded-2xl p-6 text-center text-sm text-muted">Aucun document complémentaire pour le moment.</div>}
+        <div className="mb-4 flex items-center justify-between gap-3"><div className="flex items-center gap-2"><FileLock2 size={18} className="text-mint" /><h2 className="text-lg font-semibold text-white">Tous les documents du voyage</h2></div><Badge tone="mint">{vault.displayedDocuments.length} fichier{vault.displayedDocuments.length === 1 ? "" : "s"}</Badge></div>
+        {vault.displayedDocuments.length
+          ? <VaultDocumentList documents={vault.displayedDocuments} savedOffline={vault.savedOffline} busy={vault.busy} onDownload={handleDownload} onPreview={vault.handlePreview} onDelete={handleDelete} />
+          : <div className="glass-card rounded-2xl p-6 text-center text-sm text-muted">Aucun document enregistré pour le moment.</div>}
       </section>
       <DocumentPreview preview={vault.preview} onClose={vault.closePreview} />
     </div>

@@ -30,6 +30,18 @@ const adminTabs = [
   { key: "vault", label: "Coffre-fort", icon: FileLock2 },
   { key: "checklist", label: "Checklist", icon: ListChecks },
 ];
+const adminTabStorageKey = "dublin-admin-active-tab";
+
+function getInitialAdminTab() {
+  try {
+    const savedTab = window.localStorage.getItem(adminTabStorageKey);
+    return adminTabs.some((tab) => tab.key === savedTab) ? savedTab : "places";
+  } catch (storageError) {
+    console.error("Impossible de restaurer l'onglet d'administration.", storageError);
+    return "places";
+  }
+}
+
 function SignInForm({ onSignIn, authError }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,7 +79,7 @@ function AdminWorkspace({ auth }) {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
-  const [activeTab, setActiveTab] = useState("places");
+  const [activeTab, setActiveTab] = useState(getInitialAdminTab);
   const visits = usePlaces("visite");
   const food = usePlaces("food");
   const pubs = usePlaces("pub");
@@ -76,6 +88,15 @@ function AdminWorkspace({ auth }) {
   const scheduleByPlace = useMemo(() => new Map(schedule.map((item) => [item.place_id, item])), [schedule]);
   const placeError = [visits.error, food.error, pubs.error].filter(Boolean).join(" ");
   const active = dataByKind[kind];
+
+  function selectAdminTab(tabKey) {
+    setActiveTab(tabKey);
+    try {
+      window.localStorage.setItem(adminTabStorageKey, tabKey);
+    } catch (storageError) {
+      console.error("Impossible de mémoriser l'onglet d'administration.", storageError);
+    }
+  }
 
   async function save(values, images) {
     setError("");
@@ -208,7 +229,7 @@ function AdminWorkspace({ auth }) {
       </section>
 
       <nav aria-label="Sections d'administration" className="grid grid-cols-2 gap-2 rounded-3xl border border-white/[0.07] bg-white/[0.025] p-2 lg:grid-cols-4" role="tablist">
-        {adminTabs.map(({ key, label, icon: Icon }) => <button key={key} id={`admin-tab-${key}`} type="button" role="tab" aria-selected={activeTab === key} aria-controls={`admin-panel-${key}`} onClick={() => setActiveTab(key)} className={`flex min-h-12 items-center justify-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold transition ${activeTab === key ? "bg-mint/[0.12] text-mint shadow-glow" : "text-slate-400 hover:bg-white/[0.04] hover:text-white"}`}><Icon size={16} />{label}</button>)}
+        {adminTabs.map(({ key, label, icon: Icon }) => <button key={key} id={`admin-tab-${key}`} type="button" role="tab" aria-selected={activeTab === key} aria-controls={`admin-panel-${key}`} onClick={() => selectAdminTab(key)} className={`flex min-h-12 items-center justify-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold transition ${activeTab === key ? "bg-mint/[0.12] text-mint shadow-glow" : "text-slate-400 hover:bg-white/[0.04] hover:text-white"}`}><Icon size={16} />{label}</button>)}
       </nav>
 
       {activeTab === "places" && <div id="admin-panel-places" role="tabpanel" aria-labelledby="admin-tab-places" className="space-y-8">

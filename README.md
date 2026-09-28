@@ -89,7 +89,7 @@ Redéployez après avoir ajouté ou changé une variable. La règle dans [`verce
 
 ## Administration V5
 
-Le tableau de bord `/admin` est organisé en quatre onglets : **Lieux & Programme**, **Journal Famille**, **Coffre-fort** et **Checklist**. Les zones photo permettent la sélection multiple ou le glisser-déposer. Dans les pages publiques, les galeries ouvrent une lightbox navigable au clavier (Échap, flèches gauche/droite). Les routes de page sont chargées à la demande ; l'interface et les chunks générés sont précachés par le service worker.
+Le tableau de bord `/admin` est organisé en quatre onglets : **Lieux & Programme**, **Journal Famille**, **Coffre-fort** et **Checklist**. L'onglet actif est mémorisé dans le stockage local du navigateur afin de rester sélectionné après le retour du sélecteur de fichiers mobile. La gestion du coffre-fort affiche la liste complète des documents sous les formulaires d'import et permet leur suppression. Les zones photo permettent la sélection multiple ou le glisser-déposer. Dans les pages publiques, les galeries ouvrent une lightbox navigable au clavier (Échap, flèches gauche/droite). Les routes de page sont chargées à la demande ; l'interface et les chunks générés sont précachés par le service worker.
 
 ## Structure V5
 
