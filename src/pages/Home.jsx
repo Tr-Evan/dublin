@@ -39,14 +39,20 @@ function FlightCard({ label, time, date, detail, icon: Icon }) {
   );
 }
 
-function HotelDetails({ className = "" }) {
+function HotelDetails() {
   return (
-    <div className={className}>
-      <p className="text-xs font-semibold uppercase tracking-[0.17em] text-mint">{trip.datesLabel} · Hébergement partagé</p>
-      <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">{trip.hotel.name}</h3>
-      <p className="mt-2 text-sm text-slate-200">{trip.hotel.address}</p>
-      <p className="mt-2 text-xs leading-5 text-slate-300">Point de départ idéal, à proximité des principales adresses du centre-ville.</p>
-      <Button className="mt-4" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(trip.hotel.name)}`} icon={ArrowRight} variant="secondary" target="_blank" rel="noreferrer">Voir l’itinéraire</Button>
+    <div className="relative z-10 flex h-full flex-col justify-end p-5 sm:p-6">
+      <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-emerald-400">{trip.datesLabel} · Hébergement partagé</p>
+      <h3 className="mb-2 text-2xl font-bold text-white">{trip.hotel.name}</h3>
+      <p className="mb-4 text-sm leading-relaxed text-white/90">{trip.hotel.address}<br />Point de départ idéal, à proximité des principales adresses du centre-ville.</p>
+      <a
+        className="flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/20 px-5 py-2 text-sm text-white backdrop-blur-sm transition-all hover:bg-white/30"
+        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(trip.hotel.name)}`}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Voir l’itinéraire <ArrowRight size={16} />
+      </a>
     </div>
   );
 }
@@ -144,13 +150,14 @@ export default function Home() {
         <SectionHeading eyebrow="Le point de chute" title="Bienvenue à Dublin" description={trip.hotel.description} />
         <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
           <div className="space-y-3">
-            <article className="overflow-hidden rounded-3xl border border-white/10 shadow-glow md:hidden">
-              <img src={hotelImage} alt="Chambre du Riu Plaza The Gresham Dublin" className="h-52 w-full object-cover sm:h-64" />
-              <HotelDetails className="p-5 sm:p-6" />
-            </article>
-            <article className="group relative hidden min-h-[23rem] isolate overflow-hidden rounded-3xl border-white/10 bg-cover bg-center shadow-glow md:flex" style={{ backgroundImage: `url("${hotelImage}")` }}>
-              <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/5 via-black/10 to-black/55" aria-hidden="true" />
-              <HotelDetails className="gradient-blur relative z-10 mt-auto w-full p-5 backdrop-blur-md sm:p-6" />
+            <article className="relative isolate h-[300px] overflow-hidden rounded-3xl border border-white/10 shadow-glow sm:h-[340px]">
+              <img src={hotelImage} alt="Riu Plaza The Gresham Dublin" className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" aria-hidden="true" />
+              <div
+                className="absolute inset-0 backdrop-blur-md [mask-image:linear-gradient(to_top,black_20%,transparent_80%)] [-webkit-mask-image:linear-gradient(to_top,black_20%,transparent_80%)]"
+                aria-hidden="true"
+              />
+              <HotelDetails />
             </article>
           </div>
           <WeatherWidget />
