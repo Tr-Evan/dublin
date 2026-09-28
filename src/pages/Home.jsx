@@ -144,7 +144,7 @@ export default function Home() {
         <SectionHeading eyebrow="Le point de chute" title="Bienvenue à Dublin" description={trip.hotel.description} />
         <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
           <div className="space-y-3">
-            <article className="overflow-hidden rounded-3xl border border-white/10 shadow-glow md:hidden">
+            <article className="overflow-hidden rounded-3xl border-white/10 shadow-glow md:hidden">
               <img src={hotelImage} alt="Chambre du Riu Plaza The Gresham Dublin" className="h-52 w-full object-cover sm:h-64" />
               <HotelDetails className="p-5 sm:p-6" />
             </article>
