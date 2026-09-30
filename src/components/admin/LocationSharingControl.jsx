@@ -20,7 +20,7 @@ export default function LocationSharingControl() {
         {(!sharing || !tracking) && <Button type="button" icon={busy ? LoaderCircle : MapPin} disabled={busy} onClick={() => void startSharing()}>{busy ? "Activation…" : sharing ? "Reprendre le partage GPS" : "Activer le partage de position"}</Button>}
         {sharing && <Button type="button" variant="secondary" icon={ShieldOff} disabled={busy} onClick={() => void disableSharing()}>Arrêter et effacer la position</Button>}
       </div>
-      <p className="mt-4 text-xs text-muted">La position approximative est réservée aux comptes voyageurs autorisés. L’activation est facultative et peut être arrêtée à tout moment.</p>
+      <p className="mt-4 text-xs text-muted">Seuls les administrateurs connectés peuvent émettre la position. Lorsqu’elle est activement partagée, sa version approximative est visible par toute personne disposant du lien famille. L’activation est facultative et peut être arrêtée à tout moment.</p>
     </section>
   );
 }

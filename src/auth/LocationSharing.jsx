@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useAdminAuth } from "./AdminAuth";
 import { getSharedLocation } from "../services/familyService";
 import { publishApproximateLocation, stopLocationSharing } from "../services/locationService";
 import { supabase } from "../services/supabaseClient";
@@ -15,12 +16,14 @@ function distanceInMeters(first, second) {
 }
 
 export function LocationSharingProvider({ children }) {
+  const { session, isAdmin, loading: authLoading } = useAdminAuth();
   const [sharing, setSharing] = useState(false);
   const [tracking, setTracking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const watchId = useRef(null);
   const lastSent = useRef(null);
+  const canShare = Boolean(session?.access_token && isAdmin);
 
   const refresh = useCallback(async () => {
     if (!supabase) return;
@@ -32,6 +35,9 @@ export function LocationSharingProvider({ children }) {
   }, []);
 
   const sendPosition = useCallback(async (position) => {
+    if (!session?.access_token || !isAdmin) {
+      throw new Error("Seuls les administrateurs connectés peuvent partager la position.");
+    }
     const next = { latitude: position.coords.latitude, longitude: position.coords.longitude };
     const now = Date.now();
     if (lastSent.current && now - lastSent.current.time < 60_000 && distanceInMeters(lastSent.current.position, next) < 100) return;
@@ -39,7 +45,7 @@ export function LocationSharingProvider({ children }) {
     lastSent.current = { position: next, time: now };
     setSharing(true);
     setError("");
-  }, []);
+  }, [session?.access_token, isAdmin]);
 
   useEffect(() => {
     void refresh();
@@ -53,8 +59,21 @@ export function LocationSharingProvider({ children }) {
     };
   }, [refresh]);
 
+  useEffect(() => {
+    if (authLoading || canShare || watchId.current === null) return;
+    if (navigator.geolocation) navigator.geolocation.clearWatch(watchId.current);
+    watchId.current = null;
+    lastSent.current = null;
+    setTracking(false);
+    setError("Le partage GPS est arrêté : une session administrateur est nécessaire pour émettre la position.");
+  }, [authLoading, canShare]);
+
   const startSharing = useCallback(async () => {
     setError("");
+    if (!session?.access_token || !isAdmin) {
+      setError("Seuls les administrateurs connectés peuvent partager la position.");
+      return;
+    }
     if (!navigator.geolocation) {
       setError("La géolocalisation n'est pas disponible dans ce navigateur.");
       return;
@@ -87,11 +106,16 @@ export function LocationSharingProvider({ children }) {
     } finally {
       setBusy(false);
     }
-  }, [sendPosition]);
+  }, [sendPosition, session?.access_token, isAdmin]);
 
   const disableSharing = useCallback(async () => {
     setBusy(true);
     setError("");
+    if (!session?.access_token || !isAdmin) {
+      setError("Seuls les administrateurs connectés peuvent désactiver le partage.");
+      setBusy(false);
+      return;
+    }
     if (watchId.current !== null && navigator.geolocation) navigator.geolocation.clearWatch(watchId.current);
     watchId.current = null;
     lastSent.current = null;
@@ -104,7 +128,7 @@ export function LocationSharingProvider({ children }) {
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [session?.access_token, isAdmin]);
 
   const value = useMemo(() => ({
     sharing, tracking, busy, error, startSharing, disableSharing,
