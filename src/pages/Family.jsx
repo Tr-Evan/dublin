@@ -45,7 +45,7 @@ export default function Family() {
           <Badge tone="mint" icon={Sparkles}>Enola & Evan.</Badge>
           <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">Un petit coucou de Dublin</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Quatre jours de découvertes à Dublin. Retrouvez les photos et petits mots d’Enola & Evan au fil du séjour.</p>
-          <p className="mt-3 flex items-center gap-2 text-xs text-slate-400"><LockKeyhole size={14} className="text-mint" />La position n'apparaît que si Evan ou Enola active volontairement le partage.</p>
+          <p className="mt-3 flex items-center gap-2 text-xs text-slate-400"><LockKeyhole size={14} className="text-mint" />La dernière position approximative reste visible publiquement, même après l'arrêt du suivi GPS.</p>
         </div>
       </motion.section>
 

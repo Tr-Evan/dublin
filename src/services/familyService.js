@@ -11,19 +11,6 @@ export async function getSchedule() {
   return data ?? [];
 }
 
-export async function getSharedLocation() {
-  if (!supabase) return null;
-  const { data, error } = await supabase
-    .from("family_locations")
-    .select("latitude, longitude, updated_at")
-    .eq("id", "dublin-trip")
-    .eq("is_sharing", true)
-    .gt("updated_at", new Date(Date.now() - 5 * 60_000).toISOString())
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return data;
-}
-
 export function getCachedSchedule() {
   try {
     localStorage.removeItem("dublin-v2:family-schedule");
