@@ -2,20 +2,21 @@ import { supabase } from "./supabaseClient";
 
 const locationCacheKey = "dublin-family-location-markers";
 const travelerNames = ["Evan", "Enola"];
+const unauthorizedLocationMessage = "Compte non autorisé à partager sa position.";
 
 export function resolveTravelerName(user) {
-  const candidates = [
-    user?.user_metadata?.traveler_name,
-    user?.user_metadata?.full_name,
-    user?.user_metadata?.name,
-    user?.email?.split("@")[0],
-  ];
-  const match = candidates
-    .filter((candidate) => typeof candidate === "string")
-    .map((candidate) => travelerNames.find((name) => new RegExp(`(^|[^a-z])${name.toLowerCase()}([^a-z]|$)`, "i").test(candidate)))
-    .find(Boolean);
-  if (!match) throw new Error("Le compte connecté doit être identifié comme Evan ou Enola (nom de profil ou adresse e-mail).");
-  return match;
+  const metadata = user?.user_metadata ?? {};
+  const metadataName = [metadata.display_name, metadata.name, metadata.first_name]
+    .find((name) => typeof name === "string" && travelerNames.includes(name.trim().toLowerCase()));
+  if (metadataName) {
+    return travelerNames.find((name) => name.toLowerCase() === metadataName.trim().toLowerCase());
+  }
+
+  const userId = user?.id;
+  if (userId && userId === import.meta.env.VITE_EVAN_USER_ID) return "Evan";
+  if (userId && userId === import.meta.env.VITE_ENOLA_USER_ID) return "Enola";
+
+  throw new Error(unauthorizedLocationMessage);
 }
 
 export function getCachedFamilyLocations() {
@@ -53,10 +54,10 @@ export async function getFamilyLocations() {
   return locations;
 }
 
-export async function publishApproximateLocation(latitude, longitude, user) {
+export async function publishApproximateLocation(latitude, longitude, user, traveler = resolveTravelerName(user)) {
   if (!supabase) throw new Error("Configurez Supabase pour activer le partage familial.");
   if (!user?.id) throw new Error("Une session administrateur est nécessaire pour partager la position.");
-  const traveler = resolveTravelerName(user);
+  if (!travelerNames.includes(traveler)) throw new Error("Le nom du voyageur doit être Evan ou Enola.");
   const { error } = await supabase.from("family_location_markers").upsert(
     {
       traveler,

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAdminAuth } from "./AdminAuth";
-import { publishApproximateLocation } from "../services/locationService";
+import { publishApproximateLocation, resolveTravelerName } from "../services/locationService";
 
 const LocationSharingContext = createContext(null);
 
@@ -23,14 +23,14 @@ export function LocationSharingProvider({ children }) {
   const lastSent = useRef(null);
   const canShare = Boolean(session?.access_token && isAdmin);
 
-  const sendPosition = useCallback(async (position) => {
+  const sendPosition = useCallback(async (position, traveler) => {
     if (!session?.access_token || !isAdmin) {
       throw new Error("Seuls les administrateurs connectés peuvent partager la position.");
     }
     const next = { latitude: position.coords.latitude, longitude: position.coords.longitude };
     const now = Date.now();
     if (lastSent.current && now - lastSent.current.time < 60_000 && distanceInMeters(lastSent.current.position, next) < 100) return;
-    await publishApproximateLocation(next.latitude, next.longitude, session.user);
+    await publishApproximateLocation(next.latitude, next.longitude, session.user, traveler);
     lastSent.current = { position: next, time: now };
     setSharing(true);
     setError("");
@@ -57,6 +57,13 @@ export function LocationSharingProvider({ children }) {
       setError("Seuls les administrateurs connectés peuvent partager la position.");
       return;
     }
+    let traveler;
+    try {
+      traveler = resolveTravelerName(session.user);
+    } catch (mappingError) {
+      setError(mappingError.message);
+      return;
+    }
     if (!navigator.geolocation) {
       setError("La géolocalisation n'est pas disponible dans ce navigateur.");
       return;
@@ -71,10 +78,10 @@ export function LocationSharingProvider({ children }) {
           timeout: 20_000,
         });
       });
-      await sendPosition(position);
+      await sendPosition(position, traveler);
       if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
       watchId.current = navigator.geolocation.watchPosition(
-        (nextPosition) => void sendPosition(nextPosition).catch((locationError) => setError(`Échec de la mise à jour GPS : ${locationError.message}`)),
+        (nextPosition) => void sendPosition(nextPosition, traveler).catch((locationError) => setError(`Échec de la mise à jour GPS : ${locationError.message}`)),
         (geoError) => {
           if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
           watchId.current = null;
