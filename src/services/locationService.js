@@ -13,8 +13,8 @@ export function resolveTravelerName(user) {
   }
 
   const userId = user?.id;
-  if (userId && userId === import.meta.env.VITE_EVAN_USER_ID) return "Evan";
-  if (userId && userId === import.meta.env.VITE_ENOLA_USER_ID) return "Enola";
+  if (userId && userId === import.meta.env.EVAN_USER_ID) return "Evan";
+  if (userId && userId === import.meta.env.ENOLA_USER_ID) return "Enola";
 
   throw new Error(unauthorizedLocationMessage);
 }
