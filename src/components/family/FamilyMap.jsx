@@ -6,7 +6,6 @@ import { supabase } from "../../services/supabaseClient";
 import Badge from "../ui/Badge";
 
 const liveThresholdMs = 5 * 60_000;
-const travelerColors = { Evan: "#79f2b2", Enola: "#67d4ff" };
 
 function getLocationStatus(location, now = Date.now()) {
   const timestamp = location.updated_at ?? location.created_at;
@@ -22,12 +21,12 @@ function getLocationStatus(location, now = Date.now()) {
 }
 
 function mergeLocations(previous, incoming) {
-  const merged = new Map(previous.map((location) => [location.traveler, location]));
+  const merged = new Map(previous.map((location) => [location.user_id, location]));
   incoming.forEach((location) => {
-    const current = merged.get(location.traveler);
+    const current = merged.get(location.user_id);
     const currentTime = new Date(current?.updated_at ?? current?.created_at ?? 0).getTime();
     const incomingTime = new Date(location.updated_at ?? location.created_at ?? 0).getTime();
-    if (!current || incomingTime >= currentTime) merged.set(location.traveler, location);
+    if (!current || incomingTime >= currentTime) merged.set(location.user_id, location);
   });
   return [...merged.values()];
 }
@@ -114,16 +113,16 @@ export default function FamilyMap() {
             <RecenterMap location={latestLocation} />
             {locations.map((location) => {
               const status = getLocationStatus(location, now);
-              const color = status.isLive ? travelerColors[location.traveler] : "#94a3b8";
+              const color = status.isLive ? "#79f2b2" : "#94a3b8";
               const coordinates = [Number(location.latitude), Number(location.longitude)];
               return (
-                <Fragment key={location.traveler}>
+                <Fragment key={location.user_id}>
                   <Circle center={coordinates} radius={110} pathOptions={{ color, fillColor: color, fillOpacity: 0.12, weight: 1 }} />
                   <CircleMarker center={coordinates} radius={9} pathOptions={{ color: "#0b1210", fillColor: color, fillOpacity: 1, weight: 4 }}>
                     <Tooltip direction="top" offset={[0, -10]} permanent>
                       <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold shadow-lg ${status.isLive ? "border-emerald-200/60 bg-emerald-950/90 text-emerald-100" : "border-slate-300/50 bg-slate-900/90 text-slate-200"}`}>
                         {status.isLive && <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />}
-                        {location.traveler} · {status.isLive ? "📍 En direct" : `Dernière position connue à ${status.time}`}
+                        {location.display_name || "Voyageur"} · {status.isLive ? "📍 En direct" : `Dernière position connue à ${status.time}`}
                       </span>
                     </Tooltip>
                   </CircleMarker>
@@ -137,7 +136,7 @@ export default function FamilyMap() {
         <div className="mx-5 mb-5 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-center sm:mx-6">
           <MapPin size={23} className="mx-auto text-mint" />
           <p className="mt-3 text-sm font-medium text-white">{loading ? "Chargement des positions…" : "Aucune position enregistrée"}</p>
-          <p className="mt-1 text-xs leading-5 text-muted">Evan et Enola apparaîtront ici après leur première activation du partage.</p>
+          <p className="mt-1 text-xs leading-5 text-muted">Les utilisateurs apparaîtront ici après leur première activation du partage.</p>
         </div>
       )}
     </section>

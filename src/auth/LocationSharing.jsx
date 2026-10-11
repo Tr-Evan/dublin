@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAdminAuth } from "./AdminAuth";
-import { publishApproximateLocation, resolveTravelerName } from "../services/locationService";
+import { publishApproximateLocation } from "../services/locationService";
 
 const LocationSharingContext = createContext(null);
 
@@ -14,27 +14,25 @@ function distanceInMeters(first, second) {
 }
 
 export function LocationSharingProvider({ children }) {
-  const { session, isAdmin, loading: authLoading } = useAdminAuth();
+  const { session, loading: authLoading } = useAdminAuth();
   const [sharing, setSharing] = useState(false);
   const [tracking, setTracking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const watchId = useRef(null);
   const lastSent = useRef(null);
-  const canShare = Boolean(session?.access_token && isAdmin);
+  const canShare = Boolean(session?.access_token);
 
-  const sendPosition = useCallback(async (position, traveler) => {
-    if (!session?.access_token || !isAdmin) {
-      throw new Error("Seuls les administrateurs connectés peuvent partager la position.");
-    }
+  const sendPosition = useCallback(async (position) => {
+    if (!session?.access_token) throw new Error("Connectez-vous pour activer votre partage.");
     const next = { latitude: position.coords.latitude, longitude: position.coords.longitude };
     const now = Date.now();
     if (lastSent.current && now - lastSent.current.time < 60_000 && distanceInMeters(lastSent.current.position, next) < 100) return;
-    await publishApproximateLocation(next.latitude, next.longitude, session.user, traveler);
+    await publishApproximateLocation(next.latitude, next.longitude);
     lastSent.current = { position: next, time: now };
     setSharing(true);
     setError("");
-  }, [session?.access_token, isAdmin]);
+  }, [session?.access_token]);
 
   useEffect(() => {
     if (authLoading || canShare) return;
@@ -44,7 +42,7 @@ export function LocationSharingProvider({ children }) {
     lastSent.current = null;
     setTracking(false);
     setSharing(false);
-    if (wasTracking) setError("Le partage GPS est arrêté : une session administrateur est nécessaire pour émettre la position.");
+    if (wasTracking) setError("Le suivi GPS est arrêté. Connectez-vous pour le reprendre.");
   }, [authLoading, canShare]);
 
   useEffect(() => () => {
@@ -53,15 +51,8 @@ export function LocationSharingProvider({ children }) {
 
   const startSharing = useCallback(async () => {
     setError("");
-    if (!session?.access_token || !isAdmin) {
-      setError("Seuls les administrateurs connectés peuvent partager la position.");
-      return;
-    }
-    let traveler;
-    try {
-      traveler = resolveTravelerName(session.user);
-    } catch (mappingError) {
-      setError(mappingError.message);
+    if (!session?.access_token) {
+      setError("Connectez-vous pour activer votre partage.");
       return;
     }
     if (!navigator.geolocation) {
@@ -78,10 +69,10 @@ export function LocationSharingProvider({ children }) {
           timeout: 20_000,
         });
       });
-      await sendPosition(position, traveler);
+      await sendPosition(position);
       if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
       watchId.current = navigator.geolocation.watchPosition(
-        (nextPosition) => void sendPosition(nextPosition, traveler).catch((locationError) => setError(`Échec de la mise à jour GPS : ${locationError.message}`)),
+        (nextPosition) => void sendPosition(nextPosition).catch((locationError) => setError(`Échec de la mise à jour GPS : ${locationError.message}`)),
         (geoError) => {
           if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
           watchId.current = null;
@@ -96,13 +87,13 @@ export function LocationSharingProvider({ children }) {
     } finally {
       setBusy(false);
     }
-  }, [sendPosition, session?.access_token, isAdmin]);
+  }, [sendPosition, session?.access_token]);
 
   const disableSharing = useCallback(() => {
     setBusy(true);
     setError("");
-    if (!session?.access_token || !isAdmin) {
-      setError("Seuls les administrateurs connectés peuvent désactiver le partage.");
+    if (!session?.access_token) {
+      setError("Connectez-vous pour gérer votre partage.");
       setBusy(false);
       return;
     }
@@ -112,7 +103,7 @@ export function LocationSharingProvider({ children }) {
     setTracking(false);
     setSharing(false);
     setBusy(false);
-  }, [session?.access_token, isAdmin]);
+  }, [session?.access_token]);
 
   const value = useMemo(() => ({
     sharing, tracking, busy, error, startSharing, disableSharing,

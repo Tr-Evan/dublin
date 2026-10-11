@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { CalendarDays, Camera, Check, Clock3, LockKeyhole, MapPin, Sparkles } from "lucide-react";
+import LocationSharingControl from "../components/admin/LocationSharingControl";
 import FamilyMap from "../components/family/FamilyMap";
 import Badge from "../components/ui/Badge";
 import SectionHeading from "../components/ui/SectionHeading";
@@ -51,6 +52,7 @@ export default function Family() {
 
       {!configured && <p role="alert" className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.05] p-4 text-sm text-amber-100">La page famille se mettra à jour dès que Supabase sera configuré.</p>}
       <FamilyMap />
+      <LocationSharingControl />
 
       <section>
         <SectionHeading eyebrow="20 — 23 octobre 2026" title="Le journal de bord" description={updatesLoading ? "Chargement des nouvelles…" : "Les nouvelles d’Enola & Evan, en temps réel."} />

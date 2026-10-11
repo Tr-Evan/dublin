@@ -1,10 +1,14 @@
 import { LoaderCircle, MapPin, Radio, ShieldOff } from "lucide-react";
+import { useAdminAuth } from "../../auth/AdminAuth";
 import { useLocationSharing } from "../../auth/LocationSharing";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 
 export default function LocationSharingControl() {
+  const { session } = useAdminAuth();
   const { sharing, tracking, busy, error, startSharing, disableSharing } = useLocationSharing();
+
+  if (!session?.access_token) return null;
 
   return (
     <section className="glass-card rounded-3xl p-5 sm:p-6">
@@ -17,10 +21,10 @@ export default function LocationSharingControl() {
       </div>
       {error && <p role="alert" className="mt-4 rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-3 text-sm text-rose-200">{error}</p>}
       <div className="mt-5 flex flex-wrap gap-3">
-        {(!sharing || !tracking) && <Button type="button" icon={busy ? LoaderCircle : MapPin} disabled={busy} onClick={() => void startSharing()}>{busy ? "Activation…" : sharing ? "Reprendre le partage GPS" : "Activer le partage de position"}</Button>}
+        {(!sharing || !tracking) && <Button type="button" icon={busy ? LoaderCircle : MapPin} disabled={busy} onClick={() => void startSharing()}>{busy ? "Activation…" : sharing ? "Reprendre le partage GPS" : "Activer mon partage"}</Button>}
         {sharing && <Button type="button" variant="secondary" icon={ShieldOff} disabled={busy} onClick={() => void disableSharing()}>Arrêter le suivi GPS</Button>}
       </div>
-      <p className="mt-4 text-xs text-muted">Seuls les administrateurs connectés peuvent émettre la position. Les dernières coordonnées approximatives d’Evan et d’Enola restent visibles publiquement, même après l’arrêt du suivi.</p>
+      <p className="mt-4 text-xs text-muted">Chaque utilisateur connecté peut émettre sa position approximative. Les dernières coordonnées restent visibles publiquement, même après l’arrêt du suivi.</p>
     </section>
   );
 }
